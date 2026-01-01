@@ -39,7 +39,7 @@ struct ContentListView: View {
             case .flagged:
                 TaskListView(filter: .flagged)
             case .project(let projectId):
-                TaskListView(filter: .project(projectId))
+                ProjectContentView(projectId: projectId)
             case .goals:
                 GoalListView()
             case .notes:
@@ -55,6 +55,94 @@ struct ContentListView: View {
             }
         }
         .frame(minWidth: 300)
+    }
+}
+
+// MARK: - Project Content View
+
+struct ProjectContentView: View {
+    let projectId: String
+    @State private var viewMode: ViewMode = .list
+
+    enum ViewMode: String, CaseIterable {
+        case list = "List"
+        case board = "Board"
+
+        var icon: String {
+            switch self {
+            case .list: return "list.bullet"
+            case .board: return "rectangle.3.group"
+            }
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // View mode picker
+            HStack {
+                Spacer()
+                Picker("View", selection: $viewMode) {
+                    ForEach(ViewMode.allCases, id: \.self) { mode in
+                        Label(mode.rawValue, systemImage: mode.icon)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 150)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            // Content
+            switch viewMode {
+            case .list:
+                TaskListView(filter: .project(projectId))
+            case .board:
+                ProjectBoardView(projectId: projectId)
+            }
+        }
+    }
+}
+
+// MARK: - Project Board View
+
+struct ProjectBoardView: View {
+    let projectId: String
+    @State private var boardId: String?
+
+    var body: some View {
+        Group {
+            if let boardId = boardId {
+                BoardView(boardId: boardId)
+            } else {
+                VStack(spacing: 16) {
+                    Text("No board yet")
+                        .foregroundColor(.secondary)
+                    Button("Create Board") {
+                        Task { await createBoard() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .task {
+            await loadBoard()
+        }
+    }
+
+    private func loadBoard() async {
+        let repository = BoardRepository()
+        if let board = try? await repository.fetchDefaultBoard(projectId: projectId) {
+            boardId = board.id
+        }
+    }
+
+    private func createBoard() async {
+        let repository = BoardRepository()
+        if let board = try? await repository.createBoardWithDefaultColumns(title: "Project Board", projectId: projectId) {
+            boardId = board.id
+        }
     }
 }
 
@@ -101,47 +189,20 @@ struct EmptyDetailView: View {
     }
 }
 
-// MARK: - Placeholder Views
-
-struct TaskListView: View {
-    enum Filter {
-        case inbox, today, upcoming, flagged, project(String)
-    }
-
-    let filter: Filter
-
-    var body: some View {
-        List {
-            Text("Task list for \(filterName)")
-                .foregroundColor(.secondary)
-        }
-        .navigationTitle(filterName)
-    }
-
-    private var filterName: String {
-        switch filter {
-        case .inbox: return "Inbox"
-        case .today: return "Today"
-        case .upcoming: return "Upcoming"
-        case .flagged: return "Flagged"
-        case .project: return "Project"
-        }
-    }
-}
-
-struct TaskDetailView: View {
-    let taskId: String
-
-    var body: some View {
-        Text("Task Detail: \(taskId)")
-    }
-}
+// MARK: - Placeholder Views (to be implemented in later phases)
 
 struct GoalListView: View {
     var body: some View {
-        List {
+        VStack(spacing: 16) {
+            Image(systemName: "target")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
             Text("Goals")
+                .font(.headline)
+            Text("Coming in Phase 3")
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle("Goals")
     }
 }
@@ -156,9 +217,16 @@ struct GoalDetailView: View {
 
 struct NoteListView: View {
     var body: some View {
-        List {
+        VStack(spacing: 16) {
+            Image(systemName: "doc.text")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
             Text("Notes")
+                .font(.headline)
+            Text("Coming in Phase 4")
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle("Notes")
     }
 }
@@ -173,37 +241,82 @@ struct NoteEditorView: View {
 
 struct DailyNoteView: View {
     var body: some View {
-        Text("Daily Note")
-            .navigationTitle("Daily Note")
+        VStack(spacing: 16) {
+            Image(systemName: "calendar.day.timeline.left")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+            Text("Daily Note")
+                .font(.headline)
+            Text("Coming in Phase 4")
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle("Daily Note")
     }
 }
 
 struct HabitListView: View {
     var body: some View {
-        List {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
             Text("Habits")
+                .font(.headline)
+            Text("Coming in Phase 5")
+                .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle("Habits")
     }
 }
 
 struct ActivityDashboardView: View {
     var body: some View {
-        Text("Activity Dashboard")
-            .navigationTitle("Activity")
+        VStack(spacing: 16) {
+            Image(systemName: "chart.bar")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+            Text("Activity Tracking")
+                .font(.headline)
+            Text("Coming in Phase 6")
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle("Activity")
     }
 }
 
 struct WeeklyReviewView: View {
     var body: some View {
-        Text("Weekly Review")
-            .navigationTitle("Weekly Review")
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.seal")
+                .font(.system(size: 48))
+                .foregroundColor(.secondary)
+            Text("Weekly Review")
+                .font(.headline)
+            Text("Coming in Phase 7")
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationTitle("Weekly Review")
     }
 }
 
 struct SettingsView: View {
+    @AppStorage("isVimModeEnabled") private var isVimModeEnabled = true
+
     var body: some View {
-        Text("Settings")
-            .frame(width: 400, height: 300)
+        Form {
+            Section("Editor") {
+                Toggle("Vim Mode", isOn: $isVimModeEnabled)
+            }
+
+            Section("About") {
+                LabeledContent("Version", value: "1.0.0")
+            }
+        }
+        .formStyle(.grouped)
+        .frame(width: 400, height: 300)
     }
 }
