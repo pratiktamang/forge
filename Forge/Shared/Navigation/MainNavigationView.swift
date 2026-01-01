@@ -193,43 +193,19 @@ struct EmptyDetailView: View {
 
 // GoalListView and GoalDetailView are now in Features/Goals/Views/
 
-struct NoteListView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "doc.text")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Notes")
-                .font(.headline)
-            Text("Coming in Phase 4")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("Notes")
-    }
-}
+// NoteListView is now in Features/Notes/Views/NoteListView.swift
 
 struct NoteEditorView: View {
     let noteId: String
 
     var body: some View {
-        Text("Note Editor: \(noteId)")
+        NoteEditorViewFull(noteId: noteId)
     }
 }
 
 struct DailyNoteView: View {
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "calendar.day.timeline.left")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Daily Note")
-                .font(.headline)
-            Text("Coming in Phase 4")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("Daily Note")
+        DailyNoteListView()
     }
 }
 
