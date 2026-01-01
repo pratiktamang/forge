@@ -69,9 +69,11 @@ Forge/
 - [x] Habit calendar: visual completion history with month navigation
 - [x] Calendar view: month grid with task indicators and day selection
 - [x] Calendar task list: view and manage tasks by date
+- [x] Activity tracking: app usage monitoring with productivity scoring
+- [x] Activity dashboard: daily stats, time breakdown, top apps
+- [x] App categorization: productive/neutral/distracting classification
 
 ### TODO
-- [ ] Activity tracking (app usage monitoring)
 - [ ] Weekly review workflow
 - [ ] Custom perspectives (saved filters)
 - [ ] iCloud sync

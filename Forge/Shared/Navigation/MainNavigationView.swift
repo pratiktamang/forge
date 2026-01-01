@@ -217,21 +217,7 @@ struct DailyNoteView: View {
 }
 
 
-struct ActivityDashboardView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.bar")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Activity Tracking")
-                .font(.headline)
-            Text("Coming in Phase 6")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("Activity")
-    }
-}
+// ActivityDashboardView is now in Features/Activity/Views/ActivityDashboardView.swift
 
 struct WeeklyReviewView: View {
     var body: some View {
