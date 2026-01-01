@@ -191,29 +191,7 @@ struct EmptyDetailView: View {
 
 // MARK: - Placeholder Views (to be implemented in later phases)
 
-struct GoalListView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "target")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Goals")
-                .font(.headline)
-            Text("Coming in Phase 3")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("Goals")
-    }
-}
-
-struct GoalDetailView: View {
-    let goalId: String
-
-    var body: some View {
-        Text("Goal Detail: \(goalId)")
-    }
-}
+// GoalListView and GoalDetailView are now in Features/Goals/Views/
 
 struct NoteListView: View {
     var body: some View {
