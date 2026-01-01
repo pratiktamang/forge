@@ -246,6 +246,18 @@ final class AppDatabase {
                 t.column("updatedAt", .datetime).notNull()
             }
 
+            // Custom perspectives
+            try db.create(table: "perspectives") { t in
+                t.column("id", .text).primaryKey()
+                t.column("title", .text).notNull()
+                t.column("icon", .text).notNull()
+                t.column("color", .text)
+                t.column("sortOrder", .integer).defaults(to: 0)
+                t.column("filterConfig", .text).notNull() // JSON encoded
+                t.column("createdAt", .datetime).notNull()
+                t.column("updatedAt", .datetime).notNull()
+            }
+
             // Create indices
             try db.create(index: "idx_tasks_project", on: "tasks", columns: ["projectId"])
             try db.create(index: "idx_tasks_status", on: "tasks", columns: ["status"])

@@ -43,6 +43,8 @@ struct ContentListView: View {
                 TaskListView(filter: .flagged)
             case .calendar:
                 CalendarView()
+            case .perspective(let perspectiveId):
+                PerspectiveTaskListView(perspectiveId: perspectiveId)
             case .project(let projectId):
                 ProjectContentView(projectId: projectId)
             case .goals:

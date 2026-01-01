@@ -75,9 +75,9 @@ Forge/
 - [x] Weekly review: 8-step guided review process
 - [x] Weekly review reflection: wins, challenges, lessons, next week focus
 - [x] Weekly stats: tasks completed/created, habit completion rate
+- [x] Custom perspectives: saved filters with task/project/priority/date criteria
 
 ### TODO
-- [ ] Custom perspectives (saved filters)
 - [ ] iCloud sync
 
 ## Architecture Notes
