@@ -219,21 +219,7 @@ struct DailyNoteView: View {
 
 // ActivityDashboardView is now in Features/Activity/Views/ActivityDashboardView.swift
 
-struct WeeklyReviewView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "checkmark.seal")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Weekly Review")
-                .font(.headline)
-            Text("Coming in Phase 7")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("Weekly Review")
-    }
-}
+// WeeklyReviewView is now in Features/WeeklyReview/Views/WeeklyReviewView.swift
 
 struct SettingsView: View {
     @AppStorage("isVimModeEnabled") private var isVimModeEnabled = true

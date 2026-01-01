@@ -72,9 +72,11 @@ Forge/
 - [x] Activity tracking: app usage monitoring with productivity scoring
 - [x] Activity dashboard: daily stats, time breakdown, top apps
 - [x] App categorization: productive/neutral/distracting classification
+- [x] Weekly review: 8-step guided review process
+- [x] Weekly review reflection: wins, challenges, lessons, next week focus
+- [x] Weekly stats: tasks completed/created, habit completion rate
 
 ### TODO
-- [ ] Weekly review workflow
 - [ ] Custom perspectives (saved filters)
 - [ ] iCloud sync
 
