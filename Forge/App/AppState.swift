@@ -10,6 +10,7 @@ final class AppState: ObservableObject {
     @Published var selectedNoteId: String?
     @Published var selectedProjectId: String?
     @Published var selectedGoalId: String?
+    @Published var selectedHabitId: String?
 
     // MARK: - UI State
 

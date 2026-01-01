@@ -64,10 +64,12 @@ Forge/
 - [x] Vim mode: Normal, Insert, Visual, Command modes
 - [x] Vim motions: h/j/k/l, w/b/e, 0/$, gg/G, f/F/t/T
 - [x] Vim operators: d, c, y, p
+- [x] Habit tracking: daily/weekly/custom frequency, streak calculations
+- [x] Habit stats: current streak, longest streak, 30-day completion rate
+- [x] Habit calendar: visual completion history with month navigation
 
 ### TODO
 - [ ] Calendar view for tasks
-- [ ] Habit tracking with streaks
 - [ ] Activity tracking (app usage monitoring)
 - [ ] Weekly review workflow
 - [ ] Custom perspectives (saved filters)

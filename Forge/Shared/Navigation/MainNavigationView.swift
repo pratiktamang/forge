@@ -162,6 +162,8 @@ struct DetailView: View {
                 NoteEditorView(noteId: noteId)
             } else if let goalId = appState.selectedGoalId {
                 GoalDetailView(goalId: goalId)
+            } else if let habitId = appState.selectedHabitId {
+                HabitDetailView(habitId: habitId)
             } else {
                 EmptyDetailView()
             }
@@ -212,21 +214,6 @@ struct DailyNoteView: View {
     }
 }
 
-struct HabitListView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Habits")
-                .font(.headline)
-            Text("Coming in Phase 5")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("Habits")
-    }
-}
 
 struct ActivityDashboardView: View {
     var body: some View {

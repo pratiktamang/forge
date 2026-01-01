@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00246FE80FB9081115E35592 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7CFE4764071A137C085A532 /* TaskRowView.swift */; };
 		00576F27B36B04899EC212A1 /* MarkdownEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4FD47EACD0A645BDC107302 /* MarkdownEditorView.swift */; };
+		00B4EF7F4686659A70D04C47 /* HabitRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3183219A70211E0737DFDF9 /* HabitRowView.swift */; };
 		05C96E467E743790C36C002E /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 2143775E5273D56196A96D54 /* MarkdownUI */; };
 		07678012B553FE77AC2B1340 /* GoalListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D750D9941DC3B966BFAE8C /* GoalListView.swift */; };
 		119BA34733EB7E3C43F0BB9D /* NoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450B27AC0E23CD677C79B1E8 /* NoteViewModel.swift */; };
@@ -18,6 +19,8 @@
 		28E76C9AE2A4C9BB457D2DB4 /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4FD49B9F0E4B339A05E56E /* Task.swift */; };
 		2ADE0ECDF64BA1EA7DEBD8F0 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9E1733A23C3F3DF8D7B83F /* Color+Hex.swift */; };
 		368BDBD4650B01E316072992 /* BoardColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F0BB2131830DDF96668427 /* BoardColumnView.swift */; };
+		3EEC2883D22ECB799240BA63 /* HabitListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED15E2D2E12EA92FE5821F2 /* HabitListView.swift */; };
+		42218C9A720958F979399E9B /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2868418901094F0FDD151F9E /* HabitDetailView.swift */; };
 		48838686A3485A5C5A92BD9D /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2AF49B05D8CD4238B5C9A6 /* BoardView.swift */; };
 		4B672E21492B4EFC5CC28A50 /* ProjectRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6876C7CDFECDF1AA0DEB5EA /* ProjectRepository.swift */; };
 		4E353DD84E747CCAAC3E9A85 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 749EB54C1D9FD07119776AA4 /* AppDelegate.swift */; };
@@ -49,12 +52,16 @@
 		BF3473D74D8B2EA45C433ACA /* GoalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F45DD372513388BAD124BE /* GoalViewModel.swift */; };
 		BFC8CF98D81B2AB12018CA05 /* BoardCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 941D28CE929417E5996119E8 /* BoardCardView.swift */; };
 		BFCF1FD5F8E63CB4D6A96F6C /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FC4E8A9CB36889084BB720 /* Note.swift */; };
+		C6C0E78DDBA44110C87D397C /* HabitViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46DA66B34D82FB00C280CD3 /* HabitViewModel.swift */; };
 		D506B0238329699E4BA79283 /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62894A0DEF98DD472A06BDA4 /* Habit.swift */; };
+		DB9FE4F2C2D4DE6BAFA5B48A /* HabitRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02552FD518FCC09D372D728 /* HabitRepository.swift */; };
 		DD1FDB5BD21A2D6E5035D4D9 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 7BFF07E72895E8D5A00A33AA /* GRDB */; };
 		E64105D6C7B9CC744021508B /* TaskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2F901A6F53B77FC56D12C5 /* TaskDetailView.swift */; };
 		F11C9801932E41221114256A /* TaskViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC8775B9A02925C51675434 /* TaskViewModel.swift */; };
 		F634E11B81D4EA7982C48D50 /* InitiativeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FB23CA0E7F02FB7A011594 /* InitiativeRepository.swift */; };
+		F6B876388F610184CFB618D5 /* AddHabitSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5590880879C18EF3F1039C65 /* AddHabitSheet.swift */; };
 		F7CDF6B961A8A033D474AAA1 /* TaskRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A894369FAEB06E7A2AEBBE65 /* TaskRepository.swift */; };
+		F8361F2638D842D999F5FBAE /* HabitCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65C57A29AB281467332E1D2B /* HabitCalendarView.swift */; };
 		FF75055266C03971CFE4C8B6 /* BoardColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB094E62C8244C69EEEA5CDF /* BoardColumn.swift */; };
 /* End PBXBuildFile section */
 
@@ -64,6 +71,7 @@
 		1376B0523D945E3A0ADDC08C /* GoalTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalTimelineView.swift; sourceTree = "<group>"; };
 		17B0F7EAEFC30E86FFADC75E /* DailyNoteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyNoteListView.swift; sourceTree = "<group>"; };
 		23FF9E7743C9FBCAF7667217 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		2868418901094F0FDD151F9E /* HabitDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDetailView.swift; sourceTree = "<group>"; };
 		2981275E34FA2101107FA292 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		35445E549CC8C1F0CCD50971 /* GoalDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalDetailView.swift; sourceTree = "<group>"; };
 		3946D4DD876EC8C0019D2146 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
@@ -74,10 +82,12 @@
 		46F0BB2131830DDF96668427 /* BoardColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardColumnView.swift; sourceTree = "<group>"; };
 		47F0BA2369A4B22E55A1955E /* MainNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainNavigationView.swift; sourceTree = "<group>"; };
 		521DA2F35106996D8C88AE6D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		5590880879C18EF3F1039C65 /* AddHabitSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddHabitSheet.swift; sourceTree = "<group>"; };
 		5AE8634C12F494AD87C70B67 /* BoardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardViewModel.swift; sourceTree = "<group>"; };
 		5FCD3160D22525DBF13954EB /* QuickCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureView.swift; sourceTree = "<group>"; };
 		62894A0DEF98DD472A06BDA4 /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
 		633AFE2C9BBB40A4846525A2 /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
+		65C57A29AB281467332E1D2B /* HabitCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitCalendarView.swift; sourceTree = "<group>"; };
 		6A0C81D1386108AD0CBF4FB2 /* Board.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Board.swift; sourceTree = "<group>"; };
 		73EE41534C4F30FD39153A02 /* AppDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDatabase.swift; sourceTree = "<group>"; };
 		749EB54C1D9FD07119776AA4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -88,6 +98,7 @@
 		941D28CE929417E5996119E8 /* BoardCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardCardView.swift; sourceTree = "<group>"; };
 		98D750D9941DC3B966BFAE8C /* GoalListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalListView.swift; sourceTree = "<group>"; };
 		9CAF136A2212C7BAAD8461CD /* ForgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeApp.swift; sourceTree = "<group>"; };
+		A46DA66B34D82FB00C280CD3 /* HabitViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitViewModel.swift; sourceTree = "<group>"; };
 		A894369FAEB06E7A2AEBBE65 /* TaskRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRepository.swift; sourceTree = "<group>"; };
 		A8BC687225BC30388FC3D4E3 /* NoteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRepository.swift; sourceTree = "<group>"; };
 		B4F45DD372513388BAD124BE /* GoalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalViewModel.swift; sourceTree = "<group>"; };
@@ -96,16 +107,19 @@
 		BF96827859B3AEB7B883C261 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BF9E1733A23C3F3DF8D7B83F /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		C13F5670A09A2A0B26559983 /* VimOperators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VimOperators.swift; sourceTree = "<group>"; };
+		C3183219A70211E0737DFDF9 /* HabitRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitRowView.swift; sourceTree = "<group>"; };
 		C36768F7CC18F5268DC6FC16 /* InitiativeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitiativeDetailView.swift; sourceTree = "<group>"; };
 		C4C34D9EC5956D72B5FC2730 /* VimMotions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VimMotions.swift; sourceTree = "<group>"; };
 		C6876C7CDFECDF1AA0DEB5EA /* ProjectRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRepository.swift; sourceTree = "<group>"; };
 		CC4FD49B9F0E4B339A05E56E /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Task.swift; sourceTree = "<group>"; };
+		D02552FD518FCC09D372D728 /* HabitRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitRepository.swift; sourceTree = "<group>"; };
 		D4FD47EACD0A645BDC107302 /* MarkdownEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorView.swift; sourceTree = "<group>"; };
 		E465A9E6BE8CBC6C8D286ECB /* NoteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteListView.swift; sourceTree = "<group>"; };
 		E99304970548F9E155A3AFEF /* GoalRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalRepository.swift; sourceTree = "<group>"; };
 		EAD57FE43439B2C292022C07 /* Forge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Forge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB094E62C8244C69EEEA5CDF /* BoardColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardColumn.swift; sourceTree = "<group>"; };
 		EEC991B8564280477D16A8D5 /* VimState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VimState.swift; sourceTree = "<group>"; };
+		EED15E2D2E12EA92FE5821F2 /* HabitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListView.swift; sourceTree = "<group>"; };
 		F3FB23CA0E7F02FB7A011594 /* InitiativeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitiativeRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -273,6 +287,18 @@
 			path = VimEngine;
 			sourceTree = "<group>";
 		};
+		562E46F893DD5620C4A58474 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				5590880879C18EF3F1039C65 /* AddHabitSheet.swift */,
+				65C57A29AB281467332E1D2B /* HabitCalendarView.swift */,
+				2868418901094F0FDD151F9E /* HabitDetailView.swift */,
+				EED15E2D2E12EA92FE5821F2 /* HabitListView.swift */,
+				C3183219A70211E0737DFDF9 /* HabitRowView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		5E4DEA0037579DAB2C6D25C6 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -295,6 +321,8 @@
 		742B806642DA5963D187E441 /* Habits */ = {
 			isa = PBXGroup;
 			children = (
+				BC5FD90668C394D09116296E /* ViewModels */,
+				562E46F893DD5620C4A58474 /* Views */,
 			);
 			path = Habits;
 			sourceTree = "<group>";
@@ -312,6 +340,7 @@
 			children = (
 				451D85DCA5FF7A519DE1BEFE /* BoardRepository.swift */,
 				E99304970548F9E155A3AFEF /* GoalRepository.swift */,
+				D02552FD518FCC09D372D728 /* HabitRepository.swift */,
 				F3FB23CA0E7F02FB7A011594 /* InitiativeRepository.swift */,
 				A8BC687225BC30388FC3D4E3 /* NoteRepository.swift */,
 				C6876C7CDFECDF1AA0DEB5EA /* ProjectRepository.swift */,
@@ -366,6 +395,14 @@
 				E465A9E6BE8CBC6C8D286ECB /* NoteListView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		BC5FD90668C394D09116296E /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A46DA66B34D82FB00C280CD3 /* HabitViewModel.swift */,
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 		C4774322C5E9AF06ED7CB6CD /* Goals */ = {
@@ -529,6 +566,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B04D1337BC5953A5F2DF203C /* ActivityLog.swift in Sources */,
+				F6B876388F610184CFB618D5 /* AddHabitSheet.swift in Sources */,
 				28C9810AFF460DE0AE32404C /* AppDatabase.swift in Sources */,
 				4E353DD84E747CCAAC3E9A85 /* AppDelegate.swift in Sources */,
 				502E7E2ACCA51C0C78C1C1DB /* AppState.swift in Sources */,
@@ -550,6 +588,12 @@
 				70A6772FFDB1CD772B60F4AB /* GoalTimelineView.swift in Sources */,
 				BF3473D74D8B2EA45C433ACA /* GoalViewModel.swift in Sources */,
 				D506B0238329699E4BA79283 /* Habit.swift in Sources */,
+				F8361F2638D842D999F5FBAE /* HabitCalendarView.swift in Sources */,
+				42218C9A720958F979399E9B /* HabitDetailView.swift in Sources */,
+				3EEC2883D22ECB799240BA63 /* HabitListView.swift in Sources */,
+				DB9FE4F2C2D4DE6BAFA5B48A /* HabitRepository.swift in Sources */,
+				00B4EF7F4686659A70D04C47 /* HabitRowView.swift in Sources */,
+				C6C0E78DDBA44110C87D397C /* HabitViewModel.swift in Sources */,
 				8D20406F9D42581BAD23A275 /* Initiative.swift in Sources */,
 				737264A9EB1C83A3F4B5F827 /* InitiativeDetailView.swift in Sources */,
 				F634E11B81D4EA7982C48D50 /* InitiativeRepository.swift in Sources */,
