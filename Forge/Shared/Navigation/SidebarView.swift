@@ -10,6 +10,7 @@ struct SidebarView: View {
                 sidebarRow(.inbox)
                 sidebarRow(.today)
                 sidebarRow(.upcoming)
+                sidebarRow(.calendar)
                 sidebarRow(.flagged)
             }
 

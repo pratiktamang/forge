@@ -67,9 +67,10 @@ Forge/
 - [x] Habit tracking: daily/weekly/custom frequency, streak calculations
 - [x] Habit stats: current streak, longest streak, 30-day completion rate
 - [x] Habit calendar: visual completion history with month navigation
+- [x] Calendar view: month grid with task indicators and day selection
+- [x] Calendar task list: view and manage tasks by date
 
 ### TODO
-- [ ] Calendar view for tasks
 - [ ] Activity tracking (app usage monitoring)
 - [ ] Weekly review workflow
 - [ ] Custom perspectives (saved filters)

@@ -297,4 +297,97 @@ final class TaskRepository {
                 .fetchCount(db)
         }
     }
+
+    // MARK: - Calendar Queries
+
+    func fetchByDate(_ date: Date) async throws -> [Task] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        return try await database.dbQueue.read { db in
+            try Task
+                .filter(Column("dueDate") >= startOfDay)
+                .filter(Column("dueDate") < endOfDay)
+                .filter(Column("parentTaskId") == nil)
+                .order(
+                    Column("status").asc,
+                    Column("priority").desc,
+                    Column("createdAt").desc
+                )
+                .fetchAll(db)
+        }
+    }
+
+    func fetchByDateRange(from startDate: Date, to endDate: Date) async throws -> [Task] {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate))!
+
+        return try await database.dbQueue.read { db in
+            try Task
+                .filter(Column("dueDate") >= start)
+                .filter(Column("dueDate") < end)
+                .filter(Column("parentTaskId") == nil)
+                .order(Column("dueDate").asc, Column("priority").desc)
+                .fetchAll(db)
+        }
+    }
+
+    func fetchTaskCountsByDate(from startDate: Date, to endDate: Date) async throws -> [Date: Int] {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate))!
+
+        return try await database.dbQueue.read { db in
+            let tasks = try Task
+                .filter(Column("dueDate") >= start)
+                .filter(Column("dueDate") < end)
+                .filter(Column("parentTaskId") == nil)
+                .fetchAll(db)
+
+            var counts: [Date: Int] = [:]
+            for task in tasks {
+                if let dueDate = task.dueDate {
+                    let normalizedDate = calendar.startOfDay(for: dueDate)
+                    counts[normalizedDate, default: 0] += 1
+                }
+            }
+            return counts
+        }
+    }
+
+    func observeByDate(_ date: Date) -> ValueObservation<ValueReducers.Fetch<[Task]>> {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        return ValueObservation.tracking { db in
+            try Task
+                .filter(Column("dueDate") >= startOfDay)
+                .filter(Column("dueDate") < endOfDay)
+                .filter(Column("parentTaskId") == nil)
+                .order(
+                    Column("status").asc,
+                    Column("priority").desc,
+                    Column("createdAt").desc
+                )
+                .fetchAll(db)
+        }
+    }
+
+    func observeByDateRange(from startDate: Date, to endDate: Date) -> ValueObservation<ValueReducers.Fetch<[Task]>> {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate))!
+
+        return ValueObservation.tracking { db in
+            try Task
+                .filter(Column("dueDate") >= start)
+                .filter(Column("dueDate") < end)
+                .filter(Column("parentTaskId") == nil)
+                .order(Column("dueDate").asc, Column("priority").desc)
+                .fetchAll(db)
+        }
+    }
 }

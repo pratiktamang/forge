@@ -54,6 +54,7 @@ enum SidebarSection: Hashable, Identifiable {
     case today
     case upcoming
     case flagged
+    case calendar
     case project(String)
     case goals
     case notes
@@ -68,6 +69,7 @@ enum SidebarSection: Hashable, Identifiable {
         case .today: return "today"
         case .upcoming: return "upcoming"
         case .flagged: return "flagged"
+        case .calendar: return "calendar"
         case .project(let id): return "project-\(id)"
         case .goals: return "goals"
         case .notes: return "notes"
@@ -84,6 +86,7 @@ enum SidebarSection: Hashable, Identifiable {
         case .today: return "Today"
         case .upcoming: return "Upcoming"
         case .flagged: return "Flagged"
+        case .calendar: return "Calendar"
         case .project: return "Project"
         case .goals: return "Goals"
         case .notes: return "Notes"
@@ -98,8 +101,9 @@ enum SidebarSection: Hashable, Identifiable {
         switch self {
         case .inbox: return "tray"
         case .today: return "star"
-        case .upcoming: return "calendar"
+        case .upcoming: return "calendar.badge.clock"
         case .flagged: return "flag"
+        case .calendar: return "calendar"
         case .project: return "folder"
         case .goals: return "target"
         case .notes: return "doc.text"

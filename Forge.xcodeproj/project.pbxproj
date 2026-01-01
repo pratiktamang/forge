@@ -25,6 +25,7 @@
 		4B672E21492B4EFC5CC28A50 /* ProjectRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6876C7CDFECDF1AA0DEB5EA /* ProjectRepository.swift */; };
 		4E353DD84E747CCAAC3E9A85 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 749EB54C1D9FD07119776AA4 /* AppDelegate.swift */; };
 		502E7E2ACCA51C0C78C1C1DB /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521DA2F35106996D8C88AE6D /* AppState.swift */; };
+		539B1A40AE32A2E9CB65D3CF /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76B0BE0A0036400C5B9C4FEC /* CalendarView.swift */; };
 		5964CBC4BF577D59EB102B62 /* Goal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FB21CAF3048C9243E54BDA /* Goal.swift */; };
 		598C04F71D90DAF8B9B88556 /* VimState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC991B8564280477D16A8D5 /* VimState.swift */; };
 		5E45070F9EA3C6438A9B60E6 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 22B3F54939D8563083E5E398 /* KeyboardShortcuts */; };
@@ -47,15 +48,18 @@
 		B1744D5BD8F5D7413AE5D51D /* GoalRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E99304970548F9E155A3AFEF /* GoalRepository.swift */; };
 		B1A549E00CA765F2559355E6 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3946D4DD876EC8C0019D2146 /* CommandPaletteView.swift */; };
 		B1C4E72AF1378C0246056048 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23FF9E7743C9FBCAF7667217 /* SidebarView.swift */; };
+		B1D08E276C6E4341229B2E8A /* CalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7AD76236892A58B2CDDFB53 /* CalendarViewModel.swift */; };
 		B210C6E2EE3AFE879666CE9F /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2981275E34FA2101107FA292 /* Project.swift */; };
 		B46252EEB1B64DC19B6365D7 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = D3CDB4066582460FDC2EA31F /* Markdown */; };
 		BF3473D74D8B2EA45C433ACA /* GoalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F45DD372513388BAD124BE /* GoalViewModel.swift */; };
 		BFC8CF98D81B2AB12018CA05 /* BoardCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 941D28CE929417E5996119E8 /* BoardCardView.swift */; };
 		BFCF1FD5F8E63CB4D6A96F6C /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FC4E8A9CB36889084BB720 /* Note.swift */; };
 		C6C0E78DDBA44110C87D397C /* HabitViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46DA66B34D82FB00C280CD3 /* HabitViewModel.swift */; };
+		C8A64D9CF5F04123AC363C44 /* CalendarDayCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9B5C239F25174804D3A41D /* CalendarDayCell.swift */; };
 		D506B0238329699E4BA79283 /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62894A0DEF98DD472A06BDA4 /* Habit.swift */; };
 		DB9FE4F2C2D4DE6BAFA5B48A /* HabitRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02552FD518FCC09D372D728 /* HabitRepository.swift */; };
 		DD1FDB5BD21A2D6E5035D4D9 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 7BFF07E72895E8D5A00A33AA /* GRDB */; };
+		DEA698199CD03373F905F51C /* CalendarTaskList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06E43C17D50F0D23D0502364 /* CalendarTaskList.swift */; };
 		E64105D6C7B9CC744021508B /* TaskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2F901A6F53B77FC56D12C5 /* TaskDetailView.swift */; };
 		F11C9801932E41221114256A /* TaskViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC8775B9A02925C51675434 /* TaskViewModel.swift */; };
 		F634E11B81D4EA7982C48D50 /* InitiativeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FB23CA0E7F02FB7A011594 /* InitiativeRepository.swift */; };
@@ -67,6 +71,7 @@
 
 /* Begin PBXFileReference section */
 		01A7405BBB89F4217736C827 /* Tag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tag.swift; sourceTree = "<group>"; };
+		06E43C17D50F0D23D0502364 /* CalendarTaskList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarTaskList.swift; sourceTree = "<group>"; };
 		0B351885485E26E75D2BB8E1 /* Initiative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Initiative.swift; sourceTree = "<group>"; };
 		1376B0523D945E3A0ADDC08C /* GoalTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalTimelineView.swift; sourceTree = "<group>"; };
 		17B0F7EAEFC30E86FFADC75E /* DailyNoteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyNoteListView.swift; sourceTree = "<group>"; };
@@ -91,6 +96,7 @@
 		6A0C81D1386108AD0CBF4FB2 /* Board.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Board.swift; sourceTree = "<group>"; };
 		73EE41534C4F30FD39153A02 /* AppDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDatabase.swift; sourceTree = "<group>"; };
 		749EB54C1D9FD07119776AA4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		76B0BE0A0036400C5B9C4FEC /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		83FB21CAF3048C9243E54BDA /* Goal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal.swift; sourceTree = "<group>"; };
 		83FC4E8A9CB36889084BB720 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		8A2AF49B05D8CD4238B5C9A6 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
@@ -101,6 +107,7 @@
 		A46DA66B34D82FB00C280CD3 /* HabitViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitViewModel.swift; sourceTree = "<group>"; };
 		A894369FAEB06E7A2AEBBE65 /* TaskRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRepository.swift; sourceTree = "<group>"; };
 		A8BC687225BC30388FC3D4E3 /* NoteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRepository.swift; sourceTree = "<group>"; };
+		AC9B5C239F25174804D3A41D /* CalendarDayCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDayCell.swift; sourceTree = "<group>"; };
 		B4F45DD372513388BAD124BE /* GoalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalViewModel.swift; sourceTree = "<group>"; };
 		B7CFE4764071A137C085A532 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
 		BBC8775B9A02925C51675434 /* TaskViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewModel.swift; sourceTree = "<group>"; };
@@ -121,6 +128,7 @@
 		EEC991B8564280477D16A8D5 /* VimState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VimState.swift; sourceTree = "<group>"; };
 		EED15E2D2E12EA92FE5821F2 /* HabitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitListView.swift; sourceTree = "<group>"; };
 		F3FB23CA0E7F02FB7A011594 /* InitiativeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitiativeRepository.swift; sourceTree = "<group>"; };
+		F7AD76236892A58B2CDDFB53 /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +146,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0A2A64CFCCDE23D45B24B07B /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				F7AD76236892A58B2CDDFB53 /* CalendarViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		0F702D02BAF0FF66E77F248D /* Tasks */ = {
 			isa = PBXGroup;
 			children = (
@@ -318,6 +334,16 @@
 			path = Database;
 			sourceTree = "<group>";
 		};
+		71B47E759D58AA08882D4038 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AC9B5C239F25174804D3A41D /* CalendarDayCell.swift */,
+				06E43C17D50F0D23D0502364 /* CalendarTaskList.swift */,
+				76B0BE0A0036400C5B9C4FEC /* CalendarView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		742B806642DA5963D187E441 /* Habits */ = {
 			isa = PBXGroup;
 			children = (
@@ -445,6 +471,8 @@
 		EF253B43ABC9D616C0152932 /* Calendar */ = {
 			isa = PBXGroup;
 			children = (
+				0A2A64CFCCDE23D45B24B07B /* ViewModels */,
+				71B47E759D58AA08882D4038 /* Views */,
 			);
 			path = Calendar;
 			sourceTree = "<group>";
@@ -577,6 +605,10 @@
 				998F7E29B7D4B04B7D713277 /* BoardRepository.swift in Sources */,
 				48838686A3485A5C5A92BD9D /* BoardView.swift in Sources */,
 				89A9FA3FFD2A730C4960E385 /* BoardViewModel.swift in Sources */,
+				C8A64D9CF5F04123AC363C44 /* CalendarDayCell.swift in Sources */,
+				DEA698199CD03373F905F51C /* CalendarTaskList.swift in Sources */,
+				539B1A40AE32A2E9CB65D3CF /* CalendarView.swift in Sources */,
+				B1D08E276C6E4341229B2E8A /* CalendarViewModel.swift in Sources */,
 				2ADE0ECDF64BA1EA7DEBD8F0 /* Color+Hex.swift in Sources */,
 				B1A549E00CA765F2559355E6 /* CommandPaletteView.swift in Sources */,
 				925193F33AEBA88D51A933EF /* DailyNoteListView.swift in Sources */,
