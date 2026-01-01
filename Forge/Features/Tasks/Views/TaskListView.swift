@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct TaskListView: View {
     @StateObject private var viewModel: TaskViewModel
     @EnvironmentObject var appState: AppState
@@ -60,10 +63,10 @@ struct TaskListView: View {
                 TaskRowView(
                     task: task,
                     onToggleComplete: {
-                        Task { await viewModel.toggleComplete(task) }
+                        AsyncTask { await viewModel.toggleComplete(task) }
                     },
                     onToggleFlag: {
-                        Task { await viewModel.toggleFlag(task) }
+                        AsyncTask { await viewModel.toggleFlag(task) }
                     }
                 )
                 .tag(task.id)
@@ -138,7 +141,7 @@ struct TaskListView: View {
             return nil
         }()
 
-        Task {
+        AsyncTask {
             await viewModel.createTask(title: newTaskTitle, projectId: projectId)
             newTaskTitle = ""
         }
@@ -147,7 +150,7 @@ struct TaskListView: View {
     private func deleteTasks(at offsets: IndexSet) {
         for index in offsets {
             let task = viewModel.tasks[index]
-            Task {
+            AsyncTask {
                 await viewModel.deleteTask(task)
             }
         }
@@ -156,7 +159,7 @@ struct TaskListView: View {
     private func moveTasks(from source: IndexSet, to destination: Int) {
         var tasks = viewModel.tasks
         tasks.move(fromOffsets: source, toOffset: destination)
-        Task {
+        AsyncTask {
             await viewModel.reorderTasks(tasks)
         }
     }

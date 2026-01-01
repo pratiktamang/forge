@@ -1,6 +1,9 @@
 import SwiftUI
 import AppKit
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 // MARK: - Markdown Editor View
 
 struct MarkdownEditorView: NSViewRepresentable {
@@ -190,7 +193,7 @@ class VimTextView: NSTextView {
         let modifiers = event.modifierFlags
 
         // Let Vim state handle the key
-        Task { @MainActor in
+        AsyncTask { @MainActor in
             let handled = vimState.handleKey(key, modifiers: modifiers)
 
             if !handled && vimState.mode == .insert {
@@ -413,7 +416,7 @@ struct NoteEditorViewFull: View {
             // Pin button
             Button(action: {
                 viewModel.note?.isPinned.toggle()
-                Task { await viewModel.save() }
+                AsyncTask { await viewModel.save() }
             }) {
                 Image(systemName: note.isPinned ? "pin.fill" : "pin")
                     .foregroundColor(note.isPinned ? .orange : .secondary)
@@ -472,7 +475,7 @@ struct NoteEditorViewFull: View {
 
     private func handleLinkClick(_ link: String) {
         // Check if it's a wiki link
-        Task {
+        AsyncTask {
             if let note = await viewModel.navigateToLink(link) {
                 appState.selectedNoteId = note.id
             }

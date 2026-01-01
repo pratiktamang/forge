@@ -190,7 +190,7 @@ final class TaskRepository {
 
     // MARK: - Observation (Reactive)
 
-    func observeInbox() -> ValueObservation<[Task]> {
+    func observeInbox() -> ValueObservation<ValueReducers.Fetch<[Task]>> {
         ValueObservation.tracking { db in
             try Task
                 .filter(Column("status") == TaskStatus.inbox.rawValue)
@@ -199,7 +199,7 @@ final class TaskRepository {
         }
     }
 
-    func observeToday() -> ValueObservation<[Task]> {
+    func observeToday() -> ValueObservation<ValueReducers.Fetch<[Task]>> {
         let today = Calendar.current.startOfDay(for: Date())
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
 
@@ -220,7 +220,7 @@ final class TaskRepository {
         }
     }
 
-    func observeUpcoming() -> ValueObservation<[Task]> {
+    func observeUpcoming() -> ValueObservation<ValueReducers.Fetch<[Task]>> {
         let today = Calendar.current.startOfDay(for: Date())
 
         return ValueObservation.tracking { db in
@@ -234,7 +234,7 @@ final class TaskRepository {
         }
     }
 
-    func observeFlagged() -> ValueObservation<[Task]> {
+    func observeFlagged() -> ValueObservation<ValueReducers.Fetch<[Task]>> {
         ValueObservation.tracking { db in
             try Task
                 .filter(Column("isFlagged") == true)
@@ -245,7 +245,7 @@ final class TaskRepository {
         }
     }
 
-    func observeByProject(_ projectId: String) -> ValueObservation<[Task]> {
+    func observeByProject(_ projectId: String) -> ValueObservation<ValueReducers.Fetch<[Task]>> {
         ValueObservation.tracking { db in
             try Task
                 .filter(Column("projectId") == projectId)
@@ -255,7 +255,7 @@ final class TaskRepository {
         }
     }
 
-    func observeByBoardColumn(_ columnId: String) -> ValueObservation<[Task]> {
+    func observeByBoardColumn(_ columnId: String) -> ValueObservation<ValueReducers.Fetch<[Task]>> {
         ValueObservation.tracking { db in
             try Task
                 .filter(Column("boardColumnId") == columnId)
@@ -264,7 +264,7 @@ final class TaskRepository {
         }
     }
 
-    func observeTask(id: String) -> ValueObservation<Task?> {
+    func observeTask(id: String) -> ValueObservation<ValueReducers.Fetch<Task?>> {
         ValueObservation.tracking { db in
             try Task.fetchOne(db, id: id)
         }

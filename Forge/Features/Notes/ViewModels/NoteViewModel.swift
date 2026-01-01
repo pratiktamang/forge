@@ -2,6 +2,9 @@ import SwiftUI
 import Combine
 import GRDB
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 @MainActor
 final class NoteListViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -33,7 +36,7 @@ final class NoteListViewModel: ObservableObject {
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .removeDuplicates()
             .sink { [weak self] query in
-                Task {
+                AsyncTask {
                     await self?.performSearch(query)
                 }
             }
@@ -159,7 +162,7 @@ final class NoteEditorViewModel: ObservableObject {
     private let noteId: String
     private let repository: NoteRepository
     private var cancellables = Set<AnyCancellable>()
-    private var saveTask: Task<Void, Never>?
+    private var saveTask: AsyncTask<Void, Never>?
 
     init(noteId: String, repository: NoteRepository = NoteRepository()) {
         self.noteId = noteId
@@ -201,7 +204,7 @@ final class NoteEditorViewModel: ObservableObject {
             .store(in: &cancellables)
 
         // Fetch outgoing links
-        Task {
+        AsyncTask {
             await fetchOutgoingLinks()
         }
     }
@@ -226,9 +229,9 @@ final class NoteEditorViewModel: ObservableObject {
 
     private func debouncedSave() {
         saveTask?.cancel()
-        saveTask = Task {
-            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms debounce
-            if !Task.isCancelled {
+        saveTask = AsyncTask {
+            try? await AsyncTask.sleep(nanoseconds: 500_000_000) // 500ms debounce
+            if !AsyncTask.isCancelled {
                 await save()
             }
         }
@@ -325,7 +328,7 @@ final class DailyNoteViewModel: ObservableObject {
             )
 
         // Load today's note
-        Task {
+        AsyncTask {
             await loadTodaysNote()
         }
     }

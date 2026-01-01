@@ -125,18 +125,8 @@ final class NoteRepository {
     // MARK: - Search
 
     func search(query: String) async throws -> [Note] {
-        try await database.dbQueue.read { db in
-            // Use FTS for full-text search
-            let pattern = FTS5Pattern(matchingAllPrefixesOf: query)
-
-            return try Note
-                .joining(required: Note.hasOne(
-                    Table("notesFts"),
-                    on: sql: "notes.rowid = notesFts.rowid"
-                ))
-                .filter(sql: "notesFts MATCH ?", arguments: [pattern?.rawPattern ?? query])
-                .fetchAll(db)
-        }
+        // Use simple search for now - FTS can be added later
+        try await searchSimple(query: query)
     }
 
     func searchSimple(query: String) async throws -> [Note] {
@@ -224,7 +214,7 @@ final class NoteRepository {
 
     // MARK: - Observation
 
-    func observeAll() -> ValueObservation<[Note]> {
+    func observeAll() -> ValueObservation<ValueReducers.Fetch<[Note]>> {
         ValueObservation.tracking { db in
             try Note
                 .filter(Column("isDailyNote") == false)
@@ -233,13 +223,13 @@ final class NoteRepository {
         }
     }
 
-    func observeNote(id: String) -> ValueObservation<Note?> {
+    func observeNote(id: String) -> ValueObservation<ValueReducers.Fetch<Note?>> {
         ValueObservation.tracking { db in
             try Note.fetchOne(db, id: id)
         }
     }
 
-    func observeDailyNotes() -> ValueObservation<[Note]> {
+    func observeDailyNotes() -> ValueObservation<ValueReducers.Fetch<[Note]>> {
         ValueObservation.tracking { db in
             try Note
                 .filter(Column("isDailyNote") == true)
@@ -249,7 +239,7 @@ final class NoteRepository {
         }
     }
 
-    func observeBacklinks(noteId: String) -> ValueObservation<[Note]> {
+    func observeBacklinks(noteId: String) -> ValueObservation<ValueReducers.Fetch<[Note]>> {
         ValueObservation.tracking { db in
             let sourceNoteIds = try NoteLink
                 .filter(Column("targetNoteId") == noteId)

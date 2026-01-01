@@ -167,7 +167,7 @@ struct Command: Identifiable {
     let keywords: [String]
     let shortcut: String?
     let description: String?
-    let action: (AppState) -> Void
+    let action: @MainActor (AppState) -> Void
 
     init(
         title: String,
@@ -175,7 +175,7 @@ struct Command: Identifiable {
         keywords: [String] = [],
         shortcut: String? = nil,
         description: String? = nil,
-        action: @escaping (AppState) -> Void
+        action: @escaping @MainActor (AppState) -> Void
     ) {
         self.title = title
         self.icon = icon

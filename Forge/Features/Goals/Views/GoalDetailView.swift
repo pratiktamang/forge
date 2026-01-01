@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct GoalDetailView: View {
     @StateObject private var viewModel: GoalDetailViewModel
     @State private var isEditingTitle = false
@@ -104,7 +107,7 @@ struct GoalDetailView: View {
                 .textFieldStyle(.plain)
                 .onSubmit {
                     isEditingTitle = false
-                    Task { await viewModel.save() }
+                    AsyncTask { await viewModel.save() }
                 }
             } else {
                 Text(goal.title)
@@ -120,7 +123,7 @@ struct GoalDetailView: View {
     private func statusMenu(_ goal: Goal) -> some View {
         Menu {
             Button(action: {
-                Task {
+                AsyncTask {
                     viewModel.goal?.status = .active
                     await viewModel.save()
                 }
@@ -129,7 +132,7 @@ struct GoalDetailView: View {
             }
 
             Button(action: {
-                Task {
+                AsyncTask {
                     viewModel.goal?.status = .completed
                     viewModel.goal?.progress = 1.0
                     await viewModel.save()
@@ -139,7 +142,7 @@ struct GoalDetailView: View {
             }
 
             Button(action: {
-                Task {
+                AsyncTask {
                     viewModel.goal?.status = .archived
                     await viewModel.save()
                 }
@@ -213,7 +216,7 @@ struct GoalDetailView: View {
                         step: 0.05
                     )
                     .onChange(of: viewModel.goal?.progress) { _, _ in
-                        Task { await viewModel.save() }
+                        AsyncTask { await viewModel.save() }
                     }
                 }
             }
@@ -359,7 +362,7 @@ struct GoalDetailView: View {
                 Spacer()
 
                 Button("Add") {
-                    Task {
+                    AsyncTask {
                         await viewModel.addInitiative(title: newInitiativeTitle, description: nil)
                         newInitiativeTitle = ""
                         isAddingInitiative = false

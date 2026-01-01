@@ -2,6 +2,9 @@ import SwiftUI
 import Combine
 import GRDB
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 @MainActor
 final class TaskViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -73,25 +76,25 @@ final class TaskViewModel: ObservableObject {
     // MARK: - Observation
 
     func startObserving() {
-        let observation: ValueObservation<[Task]>
-
         switch filter {
         case .inbox:
-            observation = repository.observeInbox()
+            startObserving(repository.observeInbox())
         case .today:
-            observation = repository.observeToday()
+            startObserving(repository.observeToday())
         case .upcoming:
-            observation = repository.observeUpcoming()
+            startObserving(repository.observeUpcoming())
         case .flagged:
-            observation = repository.observeFlagged()
+            startObserving(repository.observeFlagged())
         case .project(let projectId):
-            observation = repository.observeByProject(projectId)
+            startObserving(repository.observeByProject(projectId))
         case .completed:
             // For completed, we'll fetch once instead of observing
-            Task { await fetchCompleted() }
+            AsyncTask { await fetchCompleted() }
             return
         }
+    }
 
+    private func startObserving<T: ValueReducer>(_ observation: ValueObservation<T>) where T.Value == [Task] {
         cancellable = observation
             .publisher(in: AppDatabase.shared.dbQueue, scheduling: .immediate)
             .receive(on: DispatchQueue.main)
@@ -257,7 +260,7 @@ final class TaskDetailViewModel: ObservableObject {
             .store(in: &cancellables)
 
         // Fetch subtasks
-        Task {
+        AsyncTask {
             await fetchSubtasks()
         }
     }

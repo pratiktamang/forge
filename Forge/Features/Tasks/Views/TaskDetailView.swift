@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct TaskDetailView: View {
     @StateObject private var viewModel: TaskDetailViewModel
     @State private var newSubtaskTitle = ""
@@ -70,7 +73,7 @@ struct TaskDetailView: View {
         HStack(alignment: .top, spacing: 16) {
             // Completion checkbox
             Button(action: {
-                Task {
+                AsyncTask {
                     if task.status == .completed {
                         var updated = task
                         updated.status = .next
@@ -102,7 +105,7 @@ struct TaskDetailView: View {
                 .textFieldStyle(.plain)
                 .focused($isTitleFocused)
                 .onSubmit {
-                    Task { await viewModel.save() }
+                    AsyncTask { await viewModel.save() }
                 }
 
                 // Status and created info
@@ -120,7 +123,7 @@ struct TaskDetailView: View {
             // Flag button
             Button(action: {
                 viewModel.task?.isFlagged.toggle()
-                Task { await viewModel.save() }
+                AsyncTask { await viewModel.save() }
             }) {
                 Image(systemName: task.isFlagged ? "flag.fill" : "flag")
                     .font(.title2)
@@ -153,7 +156,7 @@ struct TaskDetailView: View {
                                 get: { viewModel.task?.dueDate ?? Date() },
                                 set: {
                                     viewModel.task?.dueDate = $0
-                                    Task { await viewModel.save() }
+                                    AsyncTask { await viewModel.save() }
                                 }
                             ),
                             displayedComponents: .date
@@ -173,7 +176,7 @@ struct TaskDetailView: View {
                                 get: { viewModel.task?.deferDate ?? Date() },
                                 set: {
                                     viewModel.task?.deferDate = $0
-                                    Task { await viewModel.save() }
+                                    AsyncTask { await viewModel.save() }
                                 }
                             ),
                             displayedComponents: .date
@@ -191,7 +194,7 @@ struct TaskDetailView: View {
                             get: { viewModel.task?.priority ?? .none },
                             set: {
                                 viewModel.task?.priority = $0
-                                Task { await viewModel.save() }
+                                AsyncTask { await viewModel.save() }
                             }
                         )) {
                             ForEach(Priority.allCases, id: \.self) { priority in
@@ -218,7 +221,7 @@ struct TaskDetailView: View {
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 80)
                         .onSubmit {
-                            Task { await viewModel.save() }
+                            AsyncTask { await viewModel.save() }
                         }
                     }
                 )
@@ -264,7 +267,7 @@ struct TaskDetailView: View {
                     } else {
                         viewModel.task?.completedAt = nil
                     }
-                    Task { await viewModel.save() }
+                    AsyncTask { await viewModel.save() }
                 }) {
                     Label(status.displayName, systemImage: status.icon)
                 }
@@ -303,7 +306,7 @@ struct TaskDetailView: View {
             .focused($isNotesFocused)
             .onChange(of: isNotesFocused) { _, focused in
                 if !focused {
-                    Task { await viewModel.save() }
+                    AsyncTask { await viewModel.save() }
                 }
             }
         }
@@ -330,7 +333,7 @@ struct TaskDetailView: View {
                 ForEach(viewModel.subtasks) { subtask in
                     HStack(spacing: 12) {
                         Button(action: {
-                            Task { await viewModel.toggleSubtask(subtask) }
+                            AsyncTask { await viewModel.toggleSubtask(subtask) }
                         }) {
                             Image(systemName: subtask.status == .completed ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(subtask.status == .completed ? .green : .secondary)
@@ -356,7 +359,7 @@ struct TaskDetailView: View {
                         .focused($isSubtaskFocused)
                         .onSubmit {
                             guard !newSubtaskTitle.isEmpty else { return }
-                            Task {
+                            AsyncTask {
                                 await viewModel.addSubtask(title: newSubtaskTitle)
                                 newSubtaskTitle = ""
                             }

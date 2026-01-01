@@ -7,7 +7,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupMenuBar()
-        setupDatabase()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -48,13 +47,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Database
-
-    private func setupDatabase() {
-        do {
-            try AppDatabase.shared.setup()
-        } catch {
-            print("Database setup failed: \(error)")
-        }
-    }
 }

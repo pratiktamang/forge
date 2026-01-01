@@ -131,7 +131,7 @@ final class InitiativeRepository {
 
     // MARK: - Observation
 
-    func observeAll() -> ValueObservation<[Initiative]> {
+    func observeAll() -> ValueObservation<ValueReducers.Fetch<[Initiative]>> {
         ValueObservation.tracking { db in
             try Initiative
                 .filter(Column("status") != InitiativeStatus.archived.rawValue)
@@ -140,7 +140,7 @@ final class InitiativeRepository {
         }
     }
 
-    func observeByGoal(_ goalId: String) -> ValueObservation<[Initiative]> {
+    func observeByGoal(_ goalId: String) -> ValueObservation<ValueReducers.Fetch<[Initiative]>> {
         ValueObservation.tracking { db in
             try Initiative
                 .filter(Column("goalId") == goalId)
@@ -149,7 +149,7 @@ final class InitiativeRepository {
         }
     }
 
-    func observeInitiative(id: String) -> ValueObservation<Initiative?> {
+    func observeInitiative(id: String) -> ValueObservation<ValueReducers.Fetch<Initiative?>> {
         ValueObservation.tracking { db in
             try Initiative.fetchOne(db, id: id)
         }

@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct BoardView: View {
     @StateObject private var viewModel: BoardViewModel
     @State private var isAddingColumn = false
@@ -70,16 +73,16 @@ struct BoardView: View {
                         tasks: viewModel.tasks(for: column),
                         isOverWipLimit: viewModel.isOverWipLimit(column: column),
                         onAddTask: { title in
-                            Task { await viewModel.addTask(title: title, to: column) }
+                            AsyncTask { await viewModel.addTask(title: title, to: column) }
                         },
                         onMoveTask: { taskId in
-                            Task { await viewModel.moveTask(taskId, to: column) }
+                            AsyncTask { await viewModel.moveTask(taskId, to: column) }
                         },
                         onDeleteColumn: {
-                            Task { await viewModel.deleteColumn(column) }
+                            AsyncTask { await viewModel.deleteColumn(column) }
                         },
                         onUpdateColumn: { updated in
-                            Task { await viewModel.updateColumn(updated) }
+                            AsyncTask { await viewModel.updateColumn(updated) }
                         }
                     )
                 }
@@ -149,7 +152,7 @@ struct BoardView: View {
 
                 Button("Add") {
                     guard !newColumnTitle.isEmpty else { return }
-                    Task {
+                    AsyncTask {
                         await viewModel.addColumn(title: newColumnTitle)
                         newColumnTitle = ""
                         isAddingColumn = false

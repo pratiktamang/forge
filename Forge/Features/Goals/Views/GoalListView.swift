@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct GoalListView: View {
     @StateObject private var viewModel = GoalViewModel()
     @EnvironmentObject var appState: AppState
@@ -367,7 +370,7 @@ struct AddGoalSheet: View {
                 Spacer()
 
                 Button("Create") {
-                    Task {
+                    AsyncTask {
                         if goalType == .yearly {
                             await viewModel.createYearlyGoal(
                                 title: title,

@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct InitiativeDetailView: View {
     @StateObject private var viewModel: InitiativeViewModel
     @EnvironmentObject var appState: AppState
@@ -102,7 +105,7 @@ struct InitiativeDetailView: View {
             ForEach(InitiativeStatus.allCases, id: \.self) { status in
                 Button(action: {
                     viewModel.initiative?.status = status
-                    Task { await viewModel.save() }
+                    AsyncTask { await viewModel.save() }
                 }) {
                     Label(status.displayName, systemImage: statusIcon(status))
                 }
@@ -283,7 +286,7 @@ struct InitiativeDetailView: View {
                 Spacer()
 
                 Button("Create") {
-                    Task {
+                    AsyncTask {
                         await viewModel.createProject(title: newProjectTitle)
                         newProjectTitle = ""
                         isAddingProject = false

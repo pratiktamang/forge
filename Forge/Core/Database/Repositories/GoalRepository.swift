@@ -133,7 +133,7 @@ final class GoalRepository {
 
     // MARK: - Observation
 
-    func observeAll() -> ValueObservation<[Goal]> {
+    func observeAll() -> ValueObservation<ValueReducers.Fetch<[Goal]>> {
         ValueObservation.tracking { db in
             try Goal
                 .order(Column("year").desc, Column("quarter").asc)
@@ -141,7 +141,7 @@ final class GoalRepository {
         }
     }
 
-    func observeByYear(_ year: Int) -> ValueObservation<[Goal]> {
+    func observeByYear(_ year: Int) -> ValueObservation<ValueReducers.Fetch<[Goal]>> {
         ValueObservation.tracking { db in
             try Goal
                 .filter(Column("year") == year)
@@ -150,13 +150,13 @@ final class GoalRepository {
         }
     }
 
-    func observeGoal(id: String) -> ValueObservation<Goal?> {
+    func observeGoal(id: String) -> ValueObservation<ValueReducers.Fetch<Goal?>> {
         ValueObservation.tracking { db in
             try Goal.fetchOne(db, id: id)
         }
     }
 
-    func observeActiveGoals() -> ValueObservation<[Goal]> {
+    func observeActiveGoals() -> ValueObservation<ValueReducers.Fetch<[Goal]>> {
         ValueObservation.tracking { db in
             try Goal
                 .filter(Column("status") == GoalStatus.active.rawValue)

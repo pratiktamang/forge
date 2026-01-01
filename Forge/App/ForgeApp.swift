@@ -5,6 +5,15 @@ struct ForgeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
 
+    init() {
+        // Setup database before any views are created
+        do {
+            try AppDatabase.shared.setup()
+        } catch {
+            fatalError("Database setup failed: \(error)")
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             MainNavigationView()

@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct NoteListView: View {
     @StateObject private var viewModel = NoteListViewModel()
     @EnvironmentObject var appState: AppState
@@ -165,7 +168,7 @@ struct NoteListView: View {
     @ViewBuilder
     private func noteContextMenu(_ note: Note) -> some View {
         Button(action: {
-            Task { await viewModel.togglePin(note) }
+            AsyncTask { await viewModel.togglePin(note) }
         }) {
             Label(note.isPinned ? "Unpin" : "Pin", systemImage: note.isPinned ? "pin.slash" : "pin")
         }
@@ -173,7 +176,7 @@ struct NoteListView: View {
         Divider()
 
         Button(role: .destructive, action: {
-            Task { await viewModel.deleteNote(note) }
+            AsyncTask { await viewModel.deleteNote(note) }
         }) {
             Label("Delete", systemImage: "trash")
         }
@@ -198,7 +201,7 @@ struct NoteListView: View {
                 Spacer()
 
                 Button("Create") {
-                    Task {
+                    AsyncTask {
                         if let note = await viewModel.createNote(title: newNoteTitle) {
                             appState.selectedNoteId = note.id
                         }

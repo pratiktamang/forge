@@ -180,8 +180,8 @@ struct BoardCardView: View {
         BoardCardView(
             task: Task(
                 title: "Design the new homepage with updated branding",
-                dueDate: Date(),
                 priority: .high,
+                dueDate: Date(),
                 isFlagged: true
             )
         )

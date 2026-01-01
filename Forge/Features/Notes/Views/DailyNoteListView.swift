@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct DailyNoteListView: View {
     @StateObject private var viewModel = DailyNoteViewModel()
     @EnvironmentObject var appState: AppState
@@ -35,7 +38,7 @@ struct DailyNoteListView: View {
         HStack(spacing: 16) {
             // Previous day
             Button(action: {
-                Task { await viewModel.navigateToYesterday() }
+                AsyncTask { await viewModel.navigateToYesterday() }
             }) {
                 Image(systemName: "chevron.left")
             }
@@ -59,7 +62,7 @@ struct DailyNoteListView: View {
 
             // Next day
             Button(action: {
-                Task { await viewModel.navigateToTomorrow() }
+                AsyncTask { await viewModel.navigateToTomorrow() }
             }) {
                 Image(systemName: "chevron.right")
             }
@@ -70,7 +73,7 @@ struct DailyNoteListView: View {
             // Today button
             if !Calendar.current.isDateInToday(viewModel.selectedDate) {
                 Button("Today") {
-                    Task { await viewModel.navigateToToday() }
+                    AsyncTask { await viewModel.navigateToToday() }
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
@@ -88,7 +91,7 @@ struct DailyNoteListView: View {
                 selection: Binding(
                     get: { viewModel.selectedDate },
                     set: { date in
-                        Task { await viewModel.selectDate(date) }
+                        AsyncTask { await viewModel.selectDate(date) }
                     }
                 ),
                 displayedComponents: .date
@@ -101,14 +104,14 @@ struct DailyNoteListView: View {
             // Quick navigation
             HStack(spacing: 12) {
                 Button("Yesterday") {
-                    Task {
+                    AsyncTask {
                         await viewModel.navigateToYesterday()
                         showingCalendar = false
                     }
                 }
 
                 Button("Today") {
-                    Task {
+                    AsyncTask {
                         await viewModel.navigateToToday()
                         showingCalendar = false
                     }
@@ -116,7 +119,7 @@ struct DailyNoteListView: View {
                 .buttonStyle(.borderedProminent)
 
                 Button("Tomorrow") {
-                    Task {
+                    AsyncTask {
                         await viewModel.navigateToTomorrow()
                         showingCalendar = false
                     }
@@ -159,7 +162,7 @@ struct DailyNoteListView: View {
                         DailyNoteRow(note: note, isSelected: note.id == viewModel.todaysNote?.id)
                             .onTapGesture {
                                 if let date = note.dailyDate {
-                                    Task { await viewModel.selectDate(date) }
+                                    AsyncTask { await viewModel.selectDate(date) }
                                 }
                             }
                             .contextMenu {

@@ -1,5 +1,8 @@
 import SwiftUI
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 struct MainNavigationView: View {
     @EnvironmentObject var appState: AppState
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -119,7 +122,7 @@ struct ProjectBoardView: View {
                     Text("No board yet")
                         .foregroundColor(.secondary)
                     Button("Create Board") {
-                        Task { await createBoard() }
+                        AsyncTask { await createBoard() }
                     }
                     .buttonStyle(.borderedProminent)
                 }

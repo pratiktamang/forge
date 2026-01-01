@@ -79,7 +79,7 @@ final class ProjectRepository {
 
     // MARK: - Observation
 
-    func observeAll() -> ValueObservation<[Project]> {
+    func observeAll() -> ValueObservation<ValueReducers.Fetch<[Project]>> {
         ValueObservation.tracking { db in
             try Project
                 .filter(Column("status") != ProjectStatus.archived.rawValue)
@@ -88,7 +88,7 @@ final class ProjectRepository {
         }
     }
 
-    func observeActive() -> ValueObservation<[Project]> {
+    func observeActive() -> ValueObservation<ValueReducers.Fetch<[Project]>> {
         ValueObservation.tracking { db in
             try Project
                 .filter(Column("status") == ProjectStatus.active.rawValue)
@@ -97,7 +97,7 @@ final class ProjectRepository {
         }
     }
 
-    func observeProject(id: String) -> ValueObservation<Project?> {
+    func observeProject(id: String) -> ValueObservation<ValueReducers.Fetch<Project?>> {
         ValueObservation.tracking { db in
             try Project.fetchOne(db, id: id)
         }

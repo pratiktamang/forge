@@ -105,13 +105,13 @@ final class BoardRepository {
 
     // MARK: - Observation
 
-    func observeBoard(id: String) -> ValueObservation<Board?> {
+    func observeBoard(id: String) -> ValueObservation<ValueReducers.Fetch<Board?>> {
         ValueObservation.tracking { db in
             try Board.fetchOne(db, id: id)
         }
     }
 
-    func observeColumns(boardId: String) -> ValueObservation<[BoardColumn]> {
+    func observeColumns(boardId: String) -> ValueObservation<ValueReducers.Fetch<[BoardColumn]>> {
         ValueObservation.tracking { db in
             try BoardColumn
                 .filter(Column("boardId") == boardId)
@@ -120,7 +120,7 @@ final class BoardRepository {
         }
     }
 
-    func observeBoardsByProject(_ projectId: String) -> ValueObservation<[Board]> {
+    func observeBoardsByProject(_ projectId: String) -> ValueObservation<ValueReducers.Fetch<[Board]>> {
         ValueObservation.tracking { db in
             try Board
                 .filter(Column("projectId") == projectId)

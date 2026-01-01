@@ -215,7 +215,7 @@ struct TaskRowView: View {
 #Preview {
     VStack(spacing: 0) {
         TaskRowView(
-            task: Task(title: "Buy groceries", dueDate: Date(), priority: .high, isFlagged: true),
+            task: Task(title: "Buy groceries", priority: .high, dueDate: Date(), isFlagged: true),
             onToggleComplete: {},
             onToggleFlag: {}
         )

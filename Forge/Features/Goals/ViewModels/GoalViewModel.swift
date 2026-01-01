@@ -2,6 +2,9 @@ import SwiftUI
 import Combine
 import GRDB
 
+// Type alias to disambiguate Swift's Task from our Task model
+private typealias AsyncTask = _Concurrency.Task
+
 @MainActor
 final class GoalViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -204,7 +207,7 @@ final class GoalDetailViewModel: ObservableObject {
             .store(in: &cancellables)
 
         // Load related data
-        Task {
+        AsyncTask {
             await loadRelatedData()
         }
     }
@@ -316,7 +319,7 @@ final class InitiativeViewModel: ObservableObject {
             )
             .store(in: &cancellables)
 
-        Task {
+        AsyncTask {
             await loadProjects()
         }
     }
