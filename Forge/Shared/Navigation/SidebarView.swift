@@ -19,13 +19,6 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .frame(minWidth: 200)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { /* Toggle sidebar */ }) {
-                    Image(systemName: "sidebar.left")
-                }
-            }
-        }
         .sheet(isPresented: $isAddingPerspective) {
             PerspectiveEditorSheet()
         }
@@ -66,19 +59,15 @@ struct SidebarView: View {
         }
     }
 
+    @ViewBuilder
     private var projectsSection: some View {
-        Section("Projects") {
-            ForEach(appState.projects) { project in
-                NavigationLink(value: SidebarSection.project(project.id)) {
+        if !appState.projects.isEmpty {
+            Section("Projects") {
+                ForEach(appState.projects) { project in
                     Label(project.title, systemImage: project.icon ?? "folder")
+                        .tag(SidebarSection.project(project.id))
                 }
             }
-
-            Button(action: { /* Add project */ }) {
-                Label("Add Project", systemImage: "plus")
-                    .foregroundColor(.secondary)
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -105,24 +94,21 @@ struct SidebarView: View {
 
     // MARK: - Row Builders
 
-    @ViewBuilder
     private func sidebarRow(_ section: SidebarSection) -> some View {
-        NavigationLink(value: section) {
-            Label(section.title, systemImage: section.icon)
-        }
+        Label(section.title, systemImage: section.icon)
+            .tag(section)
     }
 
     @ViewBuilder
     private func perspectiveRow(_ perspective: Perspective) -> some View {
         let colorValue: Color = perspective.color.flatMap { Color(hex: $0) } ?? .accentColor
-        NavigationLink(value: SidebarSection.perspective(perspective.id)) {
-            Label {
-                Text(perspective.title)
-            } icon: {
-                Image(systemName: perspective.icon)
-                    .foregroundColor(colorValue)
-            }
+        Label {
+            Text(perspective.title)
+        } icon: {
+            Image(systemName: perspective.icon)
+                .foregroundColor(colorValue)
         }
+        .tag(SidebarSection.perspective(perspective.id))
         .contextMenu {
             Button("Edit") {
                 editingPerspective = perspective

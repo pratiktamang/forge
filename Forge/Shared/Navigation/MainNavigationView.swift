@@ -62,6 +62,13 @@ struct ContentListView: View {
             }
         }
         .frame(minWidth: 300)
+        .onChange(of: appState.selectedSection) { _, _ in
+            // Clear detail selections when switching sections
+            appState.selectedTaskId = nil
+            appState.selectedNoteId = nil
+            appState.selectedGoalId = nil
+            appState.selectedHabitId = nil
+        }
     }
 }
 

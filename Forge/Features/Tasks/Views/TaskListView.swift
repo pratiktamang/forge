@@ -7,7 +7,6 @@ struct TaskListView: View {
     @StateObject private var viewModel: TaskViewModel
     @EnvironmentObject var appState: AppState
     @State private var newTaskTitle = ""
-    @State private var isAddingTask = false
     @FocusState private var isNewTaskFocused: Bool
 
     init(filter: TaskViewModel.Filter) {
@@ -30,21 +29,11 @@ struct TaskListView: View {
         }
         .navigationTitle(viewModel.filter.title)
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button(action: { isAddingTask = true }) {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { isNewTaskFocused = true }) {
                     Image(systemName: "plus")
                 }
                 .keyboardShortcut("n", modifiers: .command)
-
-                Menu {
-                    Button("Sort by Due Date") { }
-                    Button("Sort by Priority") { }
-                    Button("Sort by Created") { }
-                    Divider()
-                    Button("Show Completed") { }
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                }
             }
         }
         .onAppear {

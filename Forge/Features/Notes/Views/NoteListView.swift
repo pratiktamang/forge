@@ -71,15 +71,13 @@ struct NoteListView: View {
     // MARK: - Notes List
 
     private var notesList: some View {
-        List {
+        List(selection: $appState.selectedNoteId) {
             // Pinned section
             if !viewModel.pinnedNotes.isEmpty {
                 Section("Pinned") {
                     ForEach(viewModel.pinnedNotes) { note in
                         NoteRowView(note: note)
-                            .onTapGesture {
-                                appState.selectedNoteId = note.id
-                            }
+                            .tag(note.id)
                             .contextMenu {
                                 noteContextMenu(note)
                             }
@@ -94,9 +92,7 @@ struct NoteListView: View {
                 } else {
                     ForEach(viewModel.notes.filter { !$0.isPinned }) { note in
                         NoteRowView(note: note)
-                            .onTapGesture {
-                                appState.selectedNoteId = note.id
-                            }
+                            .tag(note.id)
                             .contextMenu {
                                 noteContextMenu(note)
                             }
@@ -110,7 +106,7 @@ struct NoteListView: View {
     // MARK: - Search Results
 
     private var searchResultsList: some View {
-        List {
+        List(selection: $appState.selectedNoteId) {
             if viewModel.searchResults.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "doc.text.magnifyingglass")
@@ -126,9 +122,7 @@ struct NoteListView: View {
                 Section("Search Results (\(viewModel.searchResults.count))") {
                     ForEach(viewModel.searchResults) { note in
                         NoteRowView(note: note, highlightQuery: viewModel.searchQuery)
-                            .onTapGesture {
-                                appState.selectedNoteId = note.id
-                            }
+                            .tag(note.id)
                     }
                 }
             }

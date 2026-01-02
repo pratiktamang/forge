@@ -42,11 +42,6 @@ struct PerspectiveEditorSheet: View {
             Text(viewModel.isEditing ? "Edit Perspective" : "New Perspective")
                 .font(.headline)
             Spacer()
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.secondary)
-            }
-            .buttonStyle(.plain)
         }
         .padding()
     }
