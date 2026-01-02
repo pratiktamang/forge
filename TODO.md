@@ -2,7 +2,6 @@
 
 ## High Priority
 
-- [ ] iCloud sync
 
 ## Features
 
@@ -11,7 +10,7 @@
 
 ## Low Priority
 
-### Vim Mode Polish
+## Vim Mode Polish
 The basic vim functionality is implemented but needs refinement:
 - [ ] Smoother cursor movement (feels clunky)
 - [ ] Better visual feedback during operations
@@ -22,6 +21,8 @@ The basic vim functionality is implemented but needs refinement:
 - [ ] Undo granularity (currently uses native undo which groups too much)
 - [ ] Block cursor rendering improvements
 - [ ] Status line updates feel laggy
+
+### Cloud sync
 
 ## Bugs
 
