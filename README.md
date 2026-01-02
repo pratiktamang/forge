@@ -77,8 +77,10 @@ Forge/
 - [x] Weekly stats: tasks completed/created, habit completion rate
 - [x] Custom perspectives: saved filters with task/project/priority/date criteria
 
-### TODO
-- [ ] iCloud sync
+### Planned
+- iCloud sync
+
+See [TODO.md](TODO.md) for full list.
 
 ## Architecture Notes
 
