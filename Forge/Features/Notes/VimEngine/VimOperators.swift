@@ -23,7 +23,10 @@ struct VimOperatorExecutor {
             state.registers["\""] = selectedText
             state.registers["0"] = selectedText
 
-            textView.replaceCharacters(in: range, with: "")
+            if textView.shouldChangeText(in: range, replacementString: "") {
+                textView.replaceCharacters(in: range, with: "")
+                textView.didChangeText()
+            }
             state.enterNormalMode()
             return true
 
@@ -185,7 +188,10 @@ struct VimOperatorExecutor {
         state.registers["0"] = deleted
         state.registers["1"] = deleted // Line register
 
-        textView.replaceCharacters(in: deleteRange, with: "")
+        if textView.shouldChangeText(in: deleteRange, replacementString: "") {
+            textView.replaceCharacters(in: deleteRange, with: "")
+            textView.didChangeText()
+        }
 
         // Position at first non-whitespace of next line
         let newLocation = min(lineStart, textView.string.count)

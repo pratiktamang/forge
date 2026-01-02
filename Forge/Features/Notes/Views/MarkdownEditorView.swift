@@ -174,6 +174,18 @@ struct MarkdownEditorView: NSViewRepresentable {
             }
             return false
         }
+
+        func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            // Intercept cancelOperation: (escape key) for vim mode
+            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                if let vimState = vimState,
+                   UserDefaults.standard.bool(forKey: "isVimModeEnabled") {
+                    _ = vimState.handleKeySync("\u{1B}", modifiers: [])
+                    return true // We handled it
+                }
+            }
+            return false // Let the text view handle it
+        }
     }
 }
 
@@ -189,21 +201,34 @@ class VimTextView: NSTextView {
             return
         }
 
-        let key = event.charactersIgnoringModifiers ?? ""
+        // Check for escape key by keyCode (53) since charactersIgnoringModifiers can be unreliable
+        let key: String
+        if event.keyCode == 53 {
+            key = "\u{1B}"
+        } else {
+            key = event.charactersIgnoringModifiers ?? ""
+        }
         let modifiers = event.modifierFlags
 
-        // Let Vim state handle the key
-        AsyncTask { @MainActor in
-            let handled = vimState.handleKey(key, modifiers: modifiers)
+        // Handle key synchronously - VimState is @MainActor so this is safe
+        let handled = vimState.handleKeySync(key, modifiers: modifiers)
 
-            if !handled && vimState.mode == .insert {
-                // In insert mode, let unhandled keys go through normally
-                super.keyDown(with: event)
-            }
+        if !handled && vimState.mode == .insert {
+            // In insert mode, let unhandled keys go through normally
+            super.keyDown(with: event)
         }
     }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Handle escape key for vim mode
+        if event.keyCode == 53 {
+            if let vimState = vimState,
+               UserDefaults.standard.bool(forKey: "isVimModeEnabled") {
+                _ = vimState.handleKeySync("\u{1B}", modifiers: event.modifierFlags)
+                return true
+            }
+        }
+
         // Let standard key equivalents through (Cmd+S, Cmd+C, etc.)
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
@@ -213,6 +238,7 @@ class VimTextView: NSTextView {
 
         return false
     }
+
 
     // Draw block cursor in normal mode
     override func drawInsertionPoint(in rect: NSRect, color: NSColor, turnedOn flag: Bool) {

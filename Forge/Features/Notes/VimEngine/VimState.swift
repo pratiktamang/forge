@@ -163,6 +163,14 @@ final class VimState: ObservableObject {
         }
     }
 
+    /// Synchronous key handler for use from NSTextView.keyDown
+    /// This assumes we're already on the main thread (which NSTextView guarantees)
+    nonisolated func handleKeySync(_ key: String, modifiers: NSEvent.ModifierFlags = []) -> Bool {
+        return MainActor.assumeIsolated {
+            handleKey(key, modifiers: modifiers)
+        }
+    }
+
     // MARK: - Normal Mode
 
     private func handleNormalModeKey(_ key: String, modifiers: NSEvent.ModifierFlags) -> Bool {
