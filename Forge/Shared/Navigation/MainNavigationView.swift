@@ -77,6 +77,10 @@ struct ContentListView: View {
 struct ProjectContentView: View {
     let projectId: String
     @State private var viewMode: ViewMode = .list
+    @State private var project: Project?
+    @State private var isEditingProject = false
+
+    private let repository = ProjectRepository()
 
     enum ViewMode: String, CaseIterable {
         case list = "List"
@@ -92,9 +96,17 @@ struct ProjectContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // View mode picker
+            // Header with view mode picker and settings
             HStack {
+                if let project = project {
+                    Button(action: { isEditingProject = true }) {
+                        Label("Settings", systemImage: "gearshape")
+                    }
+                    .buttonStyle(.borderless)
+                }
+
                 Spacer()
+
                 Picker("View", selection: $viewMode) {
                     ForEach(ViewMode.allCases, id: \.self) { mode in
                         Label(mode.rawValue, systemImage: mode.icon)
@@ -113,6 +125,21 @@ struct ProjectContentView: View {
                 TaskListView(filter: .project(projectId))
             case .board:
                 ProjectBoardView(projectId: projectId)
+            }
+        }
+        .task {
+            project = try? await repository.fetch(id: projectId)
+        }
+        .sheet(isPresented: $isEditingProject) {
+            if let project = project {
+                ProjectEditorSheet(project: project)
+            }
+        }
+        .onChange(of: isEditingProject) { _, isEditing in
+            if !isEditing {
+                AsyncTask {
+                    project = try? await repository.fetch(id: projectId)
+                }
             }
         }
     }

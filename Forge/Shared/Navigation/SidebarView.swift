@@ -5,8 +5,11 @@ private typealias AsyncTask = _Concurrency.Task
 struct SidebarView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var perspectiveViewModel = PerspectiveListViewModel()
+    @StateObject private var projectViewModel = ProjectListViewModel()
     @State private var isAddingPerspective = false
     @State private var editingPerspective: Perspective?
+    @State private var isAddingProject = false
+    @State private var newProjectTitle = ""
 
     var body: some View {
         List(selection: $appState.selectedSection) {
@@ -25,11 +28,25 @@ struct SidebarView: View {
         .sheet(item: $editingPerspective) { perspective in
             PerspectiveEditorSheet(perspective: perspective)
         }
+        .alert("New Project", isPresented: $isAddingProject) {
+            TextField("Project name", text: $newProjectTitle)
+            Button("Cancel", role: .cancel) {
+                newProjectTitle = ""
+            }
+            Button("Create") {
+                AsyncTask {
+                    await projectViewModel.createProject(title: newProjectTitle)
+                    newProjectTitle = ""
+                }
+            }
+        }
         .onAppear {
             perspectiveViewModel.startObserving()
+            projectViewModel.startObserving()
         }
         .onDisappear {
             perspectiveViewModel.stopObserving()
+            projectViewModel.stopObserving()
         }
     }
 
@@ -61,13 +78,22 @@ struct SidebarView: View {
 
     @ViewBuilder
     private var projectsSection: some View {
-        if !appState.projects.isEmpty {
-            Section("Projects") {
-                ForEach(appState.projects) { project in
-                    Label(project.title, systemImage: project.icon ?? "folder")
-                        .tag(SidebarSection.project(project.id))
-                }
+        Section("Projects") {
+            ForEach(projectViewModel.projects) { project in
+                Label(project.title, systemImage: project.icon ?? "folder")
+                    .tag(SidebarSection.project(project.id))
+                    .contextMenu {
+                        Button("Delete", role: .destructive) {
+                            AsyncTask { await projectViewModel.deleteProject(project) }
+                        }
+                    }
             }
+
+            Button(action: { isAddingProject = true }) {
+                Label("Add Project", systemImage: "plus")
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
         }
     }
 

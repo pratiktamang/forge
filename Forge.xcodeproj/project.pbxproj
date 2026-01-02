@@ -31,6 +31,7 @@
 		4E353DD84E747CCAAC3E9A85 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 749EB54C1D9FD07119776AA4 /* AppDelegate.swift */; };
 		502E7E2ACCA51C0C78C1C1DB /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521DA2F35106996D8C88AE6D /* AppState.swift */; };
 		539B1A40AE32A2E9CB65D3CF /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76B0BE0A0036400C5B9C4FEC /* CalendarView.swift */; };
+		56A0A611838A653585AF70C0 /* ProjectEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375124733BB3DD5537EC060F /* ProjectEditorSheet.swift */; };
 		5964CBC4BF577D59EB102B62 /* Goal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FB21CAF3048C9243E54BDA /* Goal.swift */; };
 		598C04F71D90DAF8B9B88556 /* VimState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC991B8564280477D16A8D5 /* VimState.swift */; };
 		5E45070F9EA3C6438A9B60E6 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 22B3F54939D8563083E5E398 /* KeyboardShortcuts */; };
@@ -55,6 +56,7 @@
 		998F7E29B7D4B04B7D713277 /* BoardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451D85DCA5FF7A519DE1BEFE /* BoardRepository.swift */; };
 		9E2EDB88BEAD52C7320FC4CB /* QuickCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FCD3160D22525DBF13954EB /* QuickCaptureView.swift */; };
 		A4CFED7D18B7ACB6A8B9F89E /* PerspectiveTaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E13FFCF8D5562CDCC5BADE /* PerspectiveTaskListView.swift */; };
+		AFD6C7B57125B2FF275C1637 /* ProjectListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D1C4FCD4125F0674872648 /* ProjectListViewModel.swift */; };
 		B04D1337BC5953A5F2DF203C /* ActivityLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CCC4FCC8470AADC64681337 /* ActivityLog.swift */; };
 		B0DB98501F153FC84DD4DAD7 /* MainNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F0BA2369A4B22E55A1955E /* MainNavigationView.swift */; };
 		B1744D5BD8F5D7413AE5D51D /* GoalRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E99304970548F9E155A3AFEF /* GoalRepository.swift */; };
@@ -94,7 +96,9 @@
 		29696C9590B6F17186B87164 /* WeeklyReviewRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReviewRepository.swift; sourceTree = "<group>"; };
 		2981275E34FA2101107FA292 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		2D5213C2B6B81B3AA1DCA1DC /* PerspectiveEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerspectiveEditorSheet.swift; sourceTree = "<group>"; };
+		34D1C4FCD4125F0674872648 /* ProjectListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectListViewModel.swift; sourceTree = "<group>"; };
 		35445E549CC8C1F0CCD50971 /* GoalDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalDetailView.swift; sourceTree = "<group>"; };
+		375124733BB3DD5537EC060F /* ProjectEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectEditorSheet.swift; sourceTree = "<group>"; };
 		3946D4DD876EC8C0019D2146 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		3B2F901A6F53B77FC56D12C5 /* TaskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDetailView.swift; sourceTree = "<group>"; };
 		450B27AC0E23CD677C79B1E8 /* NoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteViewModel.swift; sourceTree = "<group>"; };
@@ -326,6 +330,14 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		4974DC7FBF404D4FAF8FC8B4 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				34D1C4FCD4125F0674872648 /* ProjectListViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		4D92E0C67E2F7B85FC426E2E /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -415,6 +427,14 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
+		897782399A22FFCD2AC8F34B /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				375124733BB3DD5537EC060F /* ProjectEditorSheet.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		955FF6D1912BEB62014600B7 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -449,6 +469,15 @@
 			path = Repositories;
 			sourceTree = "<group>";
 		};
+		A9F5995E185AFFE38D92DC5A /* Projects */ = {
+			isa = PBXGroup;
+			children = (
+				4974DC7FBF404D4FAF8FC8B4 /* ViewModels */,
+				897782399A22FFCD2AC8F34B /* Views */,
+			);
+			path = Projects;
+			sourceTree = "<group>";
+		};
 		AA3944EF80CF723DBBB01291 /* Activity */ = {
 			isa = PBXGroup;
 			children = (
@@ -468,6 +497,7 @@
 				B05748A652304DE10E93BCE7 /* Kanban */,
 				1615EEA2B6210460CF475C42 /* Notes */,
 				BB881410F3CA52D50421A8CF /* Perspectives */,
+				A9F5995E185AFFE38D92DC5A /* Projects */,
 				0F702D02BAF0FF66E77F248D /* Tasks */,
 				9A59DDE9C280D70D8EE90E36 /* WeeklyReview */,
 			);
@@ -752,6 +782,8 @@
 				A4CFED7D18B7ACB6A8B9F89E /* PerspectiveTaskListView.swift in Sources */,
 				FBC1611F4FECA2A04C5A221A /* PerspectiveViewModel.swift in Sources */,
 				B210C6E2EE3AFE879666CE9F /* Project.swift in Sources */,
+				56A0A611838A653585AF70C0 /* ProjectEditorSheet.swift in Sources */,
+				AFD6C7B57125B2FF275C1637 /* ProjectListViewModel.swift in Sources */,
 				4B672E21492B4EFC5CC28A50 /* ProjectRepository.swift in Sources */,
 				9E2EDB88BEAD52C7320FC4CB /* QuickCaptureView.swift in Sources */,
 				B1C4E72AF1378C0246056048 /* SidebarView.swift in Sources */,
