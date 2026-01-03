@@ -3,12 +3,23 @@ import SwiftUI
 // Type alias to disambiguate Swift's Task from our Task model
 private typealias AsyncTask = _Concurrency.Task
 
+private enum TaskProperty: Hashable {
+    case dueDate
+    case deferDate
+    case priority
+    case project
+    case estimate
+}
+
 struct TaskDetailView: View {
     @StateObject private var viewModel: TaskDetailViewModel
     @State private var newSubtaskTitle = ""
     @State private var newTagName = ""
     @State private var isAddingTag = false
     @State private var newTagType: TagType = .tag
+    @State private var expandedProperty: TaskProperty?
+    @State private var isDuePickerPresented = false
+    @State private var isDeferPickerPresented = false
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isNotesFocused: Bool
     @FocusState private var isSubtaskFocused: Bool
@@ -145,51 +156,141 @@ struct TaskDetailView: View {
 
     @ViewBuilder
     private func propertiesSection(_ task: Task) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Properties")
+        let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        let nextWeek = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: today) ?? today
+
+        let columns = [GridItem(.adaptive(minimum: 220), spacing: 12)]
+
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Task Settings")
                 .font(.headline)
 
-            // Quick date buttons
-            HStack(spacing: 8) {
-                quickDateButton("Today", date: Date()) {
-                    viewModel.task?.dueDate = Calendar.current.startOfDay(for: Date())
-                    AsyncTask { await viewModel.save() }
-                }
-                quickDateButton("Tomorrow", date: Calendar.current.date(byAdding: .day, value: 1, to: Date())!) {
-                    viewModel.task?.dueDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date()))
-                    AsyncTask { await viewModel.save() }
-                }
-                quickDateButton("Next Week", date: Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Date())!) {
-                    viewModel.task?.dueDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Calendar.current.startOfDay(for: Date()))
-                    AsyncTask { await viewModel.save() }
-                }
-                if task.dueDate != nil {
-                    Button(action: {
-                        viewModel.task?.dueDate = nil
-                        AsyncTask { await viewModel.save() }
-                    }) {
-                        Label("Clear", systemImage: "xmark")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
-            }
-
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
-                // Due Date
-                propertyRow(
+            LazyVGrid(columns: columns, spacing: 12) {
+                TaskPropertyCard(
+                    property: .dueDate,
                     icon: "calendar",
                     label: "Due Date",
-                    content: {
-                        HStack {
+                    value: dateSummary(task.dueDate),
+                    isExpanded: expandedProperty == .dueDate,
+                    onToggle: toggleProperty
+                )
+
+                TaskPropertyCard(
+                    property: .deferDate,
+                    icon: "arrow.right.circle",
+                    label: "Defer Until",
+                    value: dateSummary(task.deferDate),
+                    isExpanded: expandedProperty == .deferDate,
+                    onToggle: toggleProperty
+                )
+
+                TaskPropertyCard(
+                    property: .priority,
+                    icon: "exclamationmark.circle",
+                    label: "Priority",
+                    value: prioritySummary(task),
+                    isExpanded: expandedProperty == .priority,
+                    onToggle: toggleProperty
+                )
+
+                TaskPropertyCard(
+                    property: .project,
+                    icon: "folder",
+                    label: "Project",
+                    value: projectSummary(task),
+                    isExpanded: expandedProperty == .project,
+                    onToggle: toggleProperty
+                )
+
+                TaskPropertyCard(
+                    property: .estimate,
+                    icon: "clock",
+                    label: "Estimate",
+                    value: estimateSummary(task),
+                    isExpanded: expandedProperty == .estimate,
+                    onToggle: toggleProperty
+                )
+            }
+
+            if let property = expandedProperty {
+                propertyDetail(
+                    for: property,
+                    task: task,
+                    today: today,
+                    tomorrow: tomorrow,
+                    nextWeek: nextWeek
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func propertyDetail(
+        for property: TaskProperty,
+        task: Task,
+        today: Date,
+        tomorrow: Date,
+        nextWeek: Date
+    ) -> some View {
+        switch property {
+        case .dueDate:
+            PropertyDetailCard(title: "Due Date") {
+                TaskDetailFlowLayout(spacing: 8) {
+                    PropertyChip(
+                        title: "None",
+                        isSelected: task.dueDate == nil,
+                        action: {
+                            viewModel.task?.dueDate = nil
+                            AsyncTask { await viewModel.save() }
+                        }
+                    )
+
+                    PropertyChip(
+                        title: "Today",
+                        isSelected: isSameDay(task.dueDate, today),
+                        action: {
+                            viewModel.task?.dueDate = today
+                            AsyncTask { await viewModel.save() }
+                        }
+                    )
+
+                    PropertyChip(
+                        title: "Tomorrow",
+                        isSelected: isSameDay(task.dueDate, tomorrow),
+                        action: {
+                            viewModel.task?.dueDate = tomorrow
+                            AsyncTask { await viewModel.save() }
+                        }
+                    )
+
+                    PropertyChip(
+                        title: "Next Week",
+                        isSelected: isSameDay(task.dueDate, nextWeek),
+                        action: {
+                            viewModel.task?.dueDate = nextWeek
+                            AsyncTask { await viewModel.save() }
+                        }
+                    )
+
+                    PropertyChip(
+                        title: "Custom",
+                        isSelected: false,
+                        icon: "calendar.badge.plus",
+                        action: {
+                            isDuePickerPresented.toggle()
+                        }
+                    )
+                    .popover(isPresented: $isDuePickerPresented) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Pick a due date")
+                                .font(.headline)
+
                             DatePicker(
                                 "",
                                 selection: Binding(
-                                    get: { viewModel.task?.dueDate ?? Date() },
+                                    get: { viewModel.task?.dueDate ?? today },
                                     set: {
                                         viewModel.task?.dueDate = $0
                                         AsyncTask { await viewModel.save() }
@@ -197,32 +298,71 @@ struct TaskDetailView: View {
                                 ),
                                 displayedComponents: .date
                             )
+                            .datePickerStyle(.graphical)
                             .labelsHidden()
 
-                            if task.dueDate != nil {
-                                Button(action: {
-                                    viewModel.task?.dueDate = nil
-                                    AsyncTask { await viewModel.save() }
-                                }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
-                                }
-                                .buttonStyle(.plain)
+                            Button("Clear Due Date") {
+                                viewModel.task?.dueDate = nil
+                                AsyncTask { await viewModel.save() }
+                                isDuePickerPresented = false
                             }
+                            .buttonStyle(.borderless)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         }
+                        .padding()
+                        .frame(width: 280, height: 320)
                     }
-                )
+                }
+            }
 
-                // Defer Date
-                propertyRow(
-                    icon: "arrow.right.circle",
-                    label: "Defer Until",
-                    content: {
-                        HStack {
+        case .deferDate:
+            PropertyDetailCard(title: "Defer Until") {
+                TaskDetailFlowLayout(spacing: 8) {
+                    PropertyChip(
+                        title: "None",
+                        isSelected: task.deferDate == nil,
+                        action: {
+                            viewModel.task?.deferDate = nil
+                            AsyncTask { await viewModel.save() }
+                        }
+                    )
+
+                    PropertyChip(
+                        title: "Tomorrow",
+                        isSelected: isSameDay(task.deferDate, tomorrow),
+                        action: {
+                            viewModel.task?.deferDate = tomorrow
+                            AsyncTask { await viewModel.save() }
+                        }
+                    )
+
+                    PropertyChip(
+                        title: "Next Week",
+                        isSelected: isSameDay(task.deferDate, nextWeek),
+                        action: {
+                            viewModel.task?.deferDate = nextWeek
+                            AsyncTask { await viewModel.save() }
+                        }
+                    )
+
+                    PropertyChip(
+                        title: "Custom",
+                        isSelected: false,
+                        icon: "calendar.badge.plus",
+                        action: {
+                            isDeferPickerPresented.toggle()
+                        }
+                    )
+                    .popover(isPresented: $isDeferPickerPresented) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Pick a defer date")
+                                .font(.headline)
+
                             DatePicker(
                                 "",
                                 selection: Binding(
-                                    get: { viewModel.task?.deferDate ?? Date() },
+                                    get: { viewModel.task?.deferDate ?? today },
                                     set: {
                                         viewModel.task?.deferDate = $0
                                         AsyncTask { await viewModel.save() }
@@ -230,123 +370,134 @@ struct TaskDetailView: View {
                                 ),
                                 displayedComponents: .date
                             )
+                            .datePickerStyle(.graphical)
                             .labelsHidden()
 
-                            if task.deferDate != nil {
-                                Button(action: {
-                                    viewModel.task?.deferDate = nil
-                                    AsyncTask { await viewModel.save() }
-                                }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
-                                }
-                                .buttonStyle(.plain)
+                            Button("Clear Defer Date") {
+                                viewModel.task?.deferDate = nil
+                                AsyncTask { await viewModel.save() }
+                                isDeferPickerPresented = false
                             }
+                            .buttonStyle(.borderless)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         }
+                        .padding()
+                        .frame(width: 280, height: 320)
                     }
-                )
+                }
+            }
 
-                // Priority
-                propertyRow(
-                    icon: "exclamationmark.circle",
-                    label: "Priority",
-                    content: {
-                        Picker("", selection: Binding(
-                            get: { viewModel.task?.priority ?? .none },
-                            set: {
-                                viewModel.task?.priority = $0
+        case .priority:
+            PropertyDetailCard(title: "Priority") {
+                TaskDetailFlowLayout(spacing: 8) {
+                    ForEach(Priority.allCases, id: \.self) { priority in
+                        PropertyChip(
+                            title: priority.displayName,
+                            isSelected: viewModel.task?.priority == priority,
+                            tint: Color(hex: priority.color),
+                            action: {
+                                viewModel.task?.priority = priority
                                 AsyncTask { await viewModel.save() }
                             }
-                        )) {
-                            ForEach(Priority.allCases, id: \.self) { priority in
-                                Text(priority.displayName).tag(priority)
-                            }
-                        }
-                        .labelsHidden()
-                    }
-                )
-
-                // Project
-                propertyRow(
-                    icon: "folder",
-                    label: "Project",
-                    content: {
-                        Picker("", selection: Binding(
-                            get: { viewModel.task?.projectId },
-                            set: {
-                                viewModel.task?.projectId = $0
-                                AsyncTask { await viewModel.save() }
-                            }
-                        )) {
-                            Text("None").tag(nil as String?)
-                            ForEach(viewModel.projects) { project in
-                                Text(project.title).tag(project.id as String?)
-                            }
-                        }
-                        .labelsHidden()
-                    }
-                )
-
-                // Estimated time
-                propertyRow(
-                    icon: "clock",
-                    label: "Estimate",
-                    content: {
-                        TextField(
-                            "minutes",
-                            value: Binding(
-                                get: { viewModel.task?.estimatedMinutes },
-                                set: { viewModel.task?.estimatedMinutes = $0 }
-                            ),
-                            format: .number
                         )
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .onSubmit {
+                    }
+                }
+            }
+
+        case .project:
+            PropertyDetailCard(title: "Project") {
+                Menu {
+                    Button("None") {
+                        viewModel.task?.projectId = nil
+                        AsyncTask { await viewModel.save() }
+                    }
+
+                    Divider()
+
+                    ForEach(viewModel.projects) { project in
+                        Button(project.title) {
+                            viewModel.task?.projectId = project.id
                             AsyncTask { await viewModel.save() }
                         }
                     }
-                )
+                } label: {
+                    Label("Select Project", systemImage: "chevron.down")
+                        .font(.caption)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .cornerRadius(8)
+                }
+                .menuStyle(.borderlessButton)
+            }
+
+        case .estimate:
+            PropertyDetailCard(title: "Estimate") {
+                HStack(spacing: 12) {
+                    Stepper(value: Binding(
+                        get: { viewModel.task?.estimatedMinutes ?? 0 },
+                        set: {
+                            viewModel.task?.estimatedMinutes = max(0, $0)
+                            AsyncTask { await viewModel.save() }
+                        }
+                    ), in: 0...1440, step: 5) {
+                        Text("\(viewModel.task?.estimatedMinutes ?? 0) min")
+                            .font(.callout)
+                    }
+                    .controlSize(.small)
+                }
             }
         }
     }
 
-    @ViewBuilder
-    private func quickDateButton(_ title: String, date: Date, action: @escaping () -> Void) -> some View {
-        let isSelected = viewModel.task?.dueDate != nil &&
-                         Calendar.current.isDate(viewModel.task!.dueDate!, inSameDayAs: date)
-        Button(action: action) {
-            Text(title)
-                .font(.caption)
-        }
-        .buttonStyle(.bordered)
-        .controlSize(.small)
-        .tint(isSelected ? .accentColor : nil)
+    private func dateSummary(_ date: Date?) -> String {
+        guard let date else { return "None" }
+        if Calendar.current.isDateInToday(date) { return "Today" }
+        if Calendar.current.isDateInTomorrow(date) { return "Tomorrow" }
+        return date.formatted(date: .abbreviated, time: .omitted)
     }
 
-    @ViewBuilder
-    private func propertyRow<Content: View>(
-        icon: String,
-        label: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(.secondary)
-                .frame(width: 20)
+    private func prioritySummary(_ task: Task) -> String {
+        task.priority.displayName
+    }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(label)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                content()
-            }
+    private func projectSummary(_ task: Task) -> String {
+        guard let id = task.projectId else { return "None" }
+        return viewModel.projects.first(where: { $0.id == id })?.title ?? "None"
+    }
 
-            Spacer()
+    private func estimateSummary(_ task: Task) -> String {
+        guard let minutes = task.estimatedMinutes, minutes > 0 else { return "No estimate" }
+        let hours = minutes / 60
+        let remainder = minutes % 60
+        if hours == 0 {
+            return "\(minutes) min"
+        } else if remainder == 0 {
+            return "\(hours)h"
+        } else {
+            return "\(hours)h \(remainder)m"
         }
-        .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(8)
+    }
+
+    private func isSameDay(_ date: Date?, _ target: Date) -> Bool {
+        guard let date else { return false }
+        return Calendar.current.isDate(date, inSameDayAs: target)
+    }
+
+    private func toggleProperty(_ property: TaskProperty) {
+        if expandedProperty == property {
+            expandedProperty = nil
+        } else {
+            expandedProperty = property
+        }
+
+        if expandedProperty != .dueDate {
+            isDuePickerPresented = false
+        }
+        if expandedProperty != .deferDate {
+            isDeferPickerPresented = false
+        }
     }
 
     // MARK: - Status Menu
@@ -392,11 +543,34 @@ struct TaskDetailView: View {
 
                 Spacer()
 
-                Button(action: { isAddingTag.toggle() }) {
-                    Label("Add", systemImage: "plus")
-                        .font(.caption)
+                Menu {
+                    if availableTags.isEmpty {
+                        Button("All tags added") {}
+                            .disabled(true)
+                    } else {
+                        ForEach(availableTags) { tag in
+                            Button {
+                                AsyncTask { await viewModel.addTag(tag) }
+                            } label: {
+                                Label(tag.displayName, systemImage: "tag")
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    Button {
+                        isAddingTag = true
+                    } label: {
+                        Label("Create New Tag", systemImage: "plus.circle")
+                    }
+                } label: {
+                    Label("Add Tag", systemImage: "plus")
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                 }
-                .buttonStyle(.bordered)
+                .menuStyle(.borderedButton)
                 .controlSize(.small)
                 .popover(isPresented: $isAddingTag) {
                     addTagPopover
@@ -414,28 +588,6 @@ struct TaskDetailView: View {
                     ForEach(viewModel.taskTags) { tag in
                         TagChip(tag: tag) {
                             AsyncTask { await viewModel.removeTag(tag) }
-                        }
-                    }
-                }
-            }
-
-            // Quick add from existing tags
-            if !availableTags.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Available")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    TaskDetailFlowLayout(spacing: 6) {
-                        ForEach(availableTags.prefix(10)) { tag in
-                            Button(action: {
-                                AsyncTask { await viewModel.addTag(tag) }
-                            }) {
-                                Text(tag.displayName)
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.mini)
                         }
                     }
                 }
@@ -623,6 +775,144 @@ struct SubtaskRow: View {
     }
 }
 
+// MARK: - Property Card
+
+private struct PropertyDetailCard<Content: View>: View {
+    let title: String
+    let content: () -> Content
+
+    init(title: String, @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title.uppercased())
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.secondary)
+
+            content()
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.secondary.opacity(0.1))
+                )
+        )
+    }
+}
+
+private struct TaskPropertyCard: View {
+    let property: TaskProperty
+    let icon: String
+    let label: String
+    let value: String
+    let isExpanded: Bool
+    let onToggle: (TaskProperty) -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        let highlight = isExpanded || isHovered
+
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(AppTheme.propertyHighlight)
+                    .frame(width: 28, height: 28)
+                    .background(AppTheme.propertyHighlight.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label.uppercased())
+                        .font(.caption2.weight(.semibold))
+                        .foregroundColor(.secondary)
+                    Text(value)
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.secondary)
+                    .opacity(0.8)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(highlight ? AppTheme.propertyHighlight.opacity(isExpanded ? 0.45 : 0.3) : Color.secondary.opacity(0.08),
+                                lineWidth: highlight ? 1.5 : 1)
+                )
+                .shadow(color: highlight ? AppTheme.propertyHighlight.opacity(0.2) : .clear,
+                        radius: highlight ? 6 : 0,
+                        x: 0,
+                        y: highlight ? 3 : 0)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .animation(.easeInOut(duration: 0.2), value: isExpanded)
+        .animation(.easeInOut(duration: 0.15), value: highlight)
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                onToggle(property)
+            }
+        }
+        #if os(macOS)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+        #endif
+    }
+}
+
+// MARK: - Property Chip
+
+private struct PropertyChip: View {
+    let title: String
+    let isSelected: Bool
+    var tint: Color? = nil
+    var icon: String? = nil
+    let action: () -> Void
+
+    var body: some View {
+        let accent = tint ?? .accentColor
+        Button(action: action) {
+            HStack(spacing: 4) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.caption2)
+                }
+                Text(title)
+                    .font(.caption.weight(.medium))
+            }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? accent.opacity(0.15) : Color(nsColor: .textBackgroundColor))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? accent : Color.secondary.opacity(0.2))
+                )
+                .foregroundColor(isSelected ? accent : .primary)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Tag Chip
 
 struct TagChip: View {
@@ -631,23 +921,33 @@ struct TagChip: View {
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
+            Image(systemName: "tag.fill")
+                .font(.caption2)
+
             Text(tag.displayName)
-                .font(.caption)
+                .font(.caption.weight(.medium))
 
             if isHovered {
                 Button(action: onRemove) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(tagColor)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(tagColor.opacity(0.15))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(
+            Capsule()
+                .fill(tagColor.opacity(0.15))
+        )
+        .overlay(
+            Capsule()
+                .stroke(tagColor.opacity(0.3))
+        )
         .foregroundColor(tagColor)
-        .cornerRadius(4)
         .onHover { hovering in
             isHovered = hovering
         }
