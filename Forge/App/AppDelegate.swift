@@ -7,6 +7,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupMenuBar()
+        customizeWindowAppearance()
+    }
+
+    private func customizeWindowAppearance() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let window = NSApp.windows.first {
+                window.titlebarAppearsTransparent = true
+                window.isOpaque = false
+                window.backgroundColor = NSColor(AppTheme.windowBackground)
+
+                // Try to hide the split view divider
+                self.hideSplitViewDividers(in: window.contentView)
+            }
+        }
+    }
+
+    private func hideSplitViewDividers(in view: NSView?) {
+        guard let view = view else { return }
+
+        if let splitView = view as? NSSplitView {
+            splitView.dividerStyle = .thin
+        }
+
+        for subview in view.subviews {
+            hideSplitViewDividers(in: subview)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

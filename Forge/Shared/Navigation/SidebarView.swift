@@ -26,12 +26,7 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .listSectionSeparator(.hidden)
         .scrollContentBackground(.hidden)
-        .background(.ultraThinMaterial)
-        .overlay(alignment: .trailing) {
-            Rectangle()
-                .fill(AppTheme.sidebarDivider.opacity(0.6))
-                .frame(width: 1)
-        }
+        .background(AppTheme.windowBackground)
         .frame(minWidth: 230)
         .sheet(isPresented: $isAddingPerspective) {
             PerspectiveEditorSheet()

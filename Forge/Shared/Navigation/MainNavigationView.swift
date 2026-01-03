@@ -26,19 +26,46 @@ struct MainNavigationView: View {
         appState.selectedHabitId != nil
     }
 
+    private var isNoteSelected: Bool {
+        appState.selectedNoteId != nil
+    }
+
+    private var listWidthFraction: CGFloat {
+        isNoteSelected ? 0.5 : 0.3
+    }
+
     var body: some View {
         NavigationSplitView {
             SidebarView()
-        } content: {
-            ContentListView()
         } detail: {
-            if hasDetailSelection && !appState.isInBoardMode {
-                DetailView()
-            } else {
-                Color.clear
+            GeometryReader { geometry in
+                HStack(spacing: 0) {
+                    ContentListView()
+                        .frame(width: hasDetailSelection && !appState.isInBoardMode
+                               ? geometry.size.width * listWidthFraction
+                               : nil)
+
+                    if hasDetailSelection && !appState.isInBoardMode {
+                        Divider()
+                        DetailView()
+                            .frame(maxWidth: .infinity)
+                            .transition(.opacity.animation(.easeOut(duration: 0.2)))
+                    }
+                }
+                .animation(.easeInOut(duration: 0.3), value: hasDetailSelection)
+                .animation(.easeInOut(duration: 0.25), value: isNoteSelected)
             }
+            .background(AppTheme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(AppTheme.cardBorder, lineWidth: 1)
+            )
+            .padding(.vertical, 12)
+            .padding(.trailing, 12)
+            .padding(.leading, 14)
         }
-        .navigationSplitViewStyle(.balanced)
+        .navigationSplitViewStyle(.prominentDetail)
         .background(AppTheme.windowBackground)
         .environment(\.textScale, appState.textScale)
         .environment(\.dynamicTypeSize, dynamicTypeSize)
@@ -89,8 +116,7 @@ struct ContentListView: View {
                 WeeklyReviewView()
             }
         }
-        .frame(minWidth: 300)
-        .background(AppTheme.contentBackground)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedSection)
         .onChange(of: appState.selectedSection) { _, _ in
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -321,8 +347,7 @@ struct DetailView: View {
                 EmptyDetailView()
             }
         }
-        .frame(minWidth: 400)
-        .background(AppTheme.cardBackground)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedTaskId)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedNoteId)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedGoalId)

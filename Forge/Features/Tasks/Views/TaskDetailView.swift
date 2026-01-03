@@ -77,7 +77,6 @@ struct TaskDetailView: View {
             }
             .padding(24)
         }
-        .background(Color(nsColor: .textBackgroundColor))
     }
 
     // MARK: - Header Section

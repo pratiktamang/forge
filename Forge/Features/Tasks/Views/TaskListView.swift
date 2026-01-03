@@ -6,8 +6,6 @@ private typealias AsyncTask = _Concurrency.Task
 struct TaskListView: View {
     @StateObject private var viewModel: TaskViewModel
     @EnvironmentObject var appState: AppState
-    @State private var newTaskTitle = ""
-    @FocusState private var isNewTaskFocused: Bool
     @FocusState private var isListFocused: Bool
 
     init(filter: TaskViewModel.Filter) {
@@ -22,21 +20,8 @@ struct TaskListView: View {
             } else {
                 taskList
             }
-
-            // Quick add bar
-            if viewModel.filter != .completed {
-                quickAddBar
-            }
         }
         .navigationTitle(viewModel.filter.title)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { isNewTaskFocused = true }) {
-                    Image(systemName: "plus")
-                }
-                .keyboardShortcut("n", modifiers: .command)
-            }
-        }
         .onAppear {
             viewModel.startObserving()
         }
@@ -88,7 +73,6 @@ struct TaskListView: View {
                 }
                 .padding(.vertical, 6)
             }
-            .background(AppTheme.contentBackground)
             .animation(.easeInOut(duration: 0.2), value: viewModel.tasks)
             .onChange(of: appState.selectedTaskId) { _, newValue in
                 if let newValue {
@@ -146,52 +130,6 @@ struct TaskListView: View {
         }
     }
 
-    // MARK: - Quick Add Bar
-
-    private var quickAddBar: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "plus.circle.fill")
-                .foregroundColor(AppTheme.accent)
-                .font(.title2)
-
-            TextField("Add task...", text: $newTaskTitle)
-                .textFieldStyle(.plain)
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundColor(AppTheme.textPrimary)
-                .padding(.vertical, 6)
-                .padding(.horizontal, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(AppTheme.cardBackground)
-                )
-                .focused($isNewTaskFocused)
-                .onSubmit { addTask() }
-
-            if !newTaskTitle.isEmpty {
-                Button(action: addTask) {
-                    Text("Add")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(AppTheme.pillPurple)
-                        )
-                        .foregroundColor(.white)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(.thinMaterial)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(AppTheme.quickAddBorder)
-                .frame(height: 1)
-        }
-    }
-
     // MARK: - Empty State
 
     private var emptyState: some View {
@@ -216,7 +154,7 @@ struct TaskListView: View {
             }
 
             if viewModel.filter != .completed {
-                Button(action: { isNewTaskFocused = true }) {
+                Button(action: { appState.showQuickCapture = true }) {
                     Label("Add Task", systemImage: "plus")
                 }
                 .buttonStyle(.borderedProminent)
@@ -271,22 +209,6 @@ struct TaskListView: View {
     }
 
     // MARK: - Actions
-
-    private func addTask() {
-        guard !newTaskTitle.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-
-        let projectId: String? = {
-            if case .project(let id) = viewModel.filter {
-                return id
-            }
-            return nil
-        }()
-
-        AsyncTask {
-            await viewModel.createTask(title: newTaskTitle, projectId: projectId)
-            newTaskTitle = ""
-        }
-    }
 
     private func moveTask(_ task: Task, by offset: Int) {
         guard let index = viewModel.tasks.firstIndex(where: { $0.id == task.id }) else { return }
