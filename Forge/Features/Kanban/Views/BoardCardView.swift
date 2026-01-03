@@ -2,61 +2,99 @@ import SwiftUI
 
 struct BoardCardView: View {
     let task: Task
+    let tags: [Tag]
+    var onToggleComplete: (() -> Void)?
+    var onToggleFlag: (() -> Void)?
+    var onSetPriority: ((Priority) -> Void)?
+    var onDelete: (() -> Void)?
+
     @State private var isHovering = false
 
+    init(task: Task, tags: [Tag] = [], onToggleComplete: (() -> Void)? = nil, onToggleFlag: (() -> Void)? = nil, onSetPriority: ((Priority) -> Void)? = nil, onDelete: (() -> Void)? = nil) {
+        self.task = task
+        self.tags = tags
+        self.onToggleComplete = onToggleComplete
+        self.onToggleFlag = onToggleFlag
+        self.onSetPriority = onSetPriority
+        self.onDelete = onDelete
+    }
+
+    private var isHighPriority: Bool {
+        task.priority == .high || task.isFlagged
+    }
+
+    private var glowColor: Color {
+        if task.priority == .high { return Color.orange }
+        if task.isFlagged { return Color.yellow }
+        return Color.clear
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             // Title
             Text(task.title)
-                .font(.subheadline.weight(.medium))
+                .font(.system(size: 14, weight: .medium))
                 .lineLimit(3)
-                .foregroundColor(task.status == .completed ? .secondary : .primary)
+                .foregroundColor(task.status == .completed ? .secondary : AppTheme.textPrimary)
                 .strikethrough(task.status == .completed)
 
-            // Metadata
-            if hasMetadata {
-                HStack(spacing: 8) {
-                    // Due date
-                    if let dueDate = task.dueDate {
-                        HStack(spacing: 4) {
-                            Image(systemName: "calendar")
-                            Text(formatDate(dueDate))
-                        }
-                        .font(.caption2)
-                        .foregroundColor(dueDateColor(dueDate))
+            // Tags
+            if !tags.isEmpty {
+                HStack(spacing: 4) {
+                    ForEach(tags.prefix(3)) { tag in
+                        Text(tag.name)
+                            .font(.system(size: 10, weight: .medium))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(hex: tag.color ?? "8E8E93").opacity(0.2))
+                            .foregroundColor(Color(hex: tag.color ?? "8E8E93"))
+                            .cornerRadius(4)
                     }
-
-                    // Priority
-                    if task.priority != .none {
-                        priorityIndicator
-                    }
-
-                    Spacer()
-
-                    // Flag
-                    if task.isFlagged {
-                        Image(systemName: "flag.fill")
-                            .font(.caption2)
-                            .foregroundColor(.orange)
-                    }
-
-                    // Notes indicator
-                    if task.notes != nil && !task.notes!.isEmpty {
-                        Image(systemName: "doc.text")
-                            .font(.caption2)
+                    if tags.count > 3 {
+                        Text("+\(tags.count - 3)")
+                            .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                 }
             }
 
-            // Tags placeholder
-            // TODO: Add tags display
+            // Bottom metadata row
+            if hasMetadata {
+                HStack(spacing: 6) {
+                    // Due date
+                    if let dueDate = task.dueDate {
+                        HStack(spacing: 3) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 9))
+                            Text(formatDate(dueDate))
+                                .font(.system(size: 10, weight: .medium))
+                        }
+                        .foregroundColor(dueDateColor(dueDate))
+                    }
+
+                    Spacer()
+
+                    // Notes indicator
+                    if task.notes != nil && !task.notes!.isEmpty {
+                        Image(systemName: "text.alignleft")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .textBackgroundColor))
-        .cornerRadius(8)
-        .shadow(color: .black.opacity(isHovering ? 0.15 : 0.05), radius: isHovering ? 4 : 2, y: isHovering ? 2 : 1)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(AppTheme.cardBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(isHighPriority ? glowColor.opacity(0.6) : AppTheme.cardBorder, lineWidth: isHighPriority ? 2 : 1)
+        )
+        .shadow(color: isHighPriority ? glowColor.opacity(0.3) : .black.opacity(0.05), radius: isHighPriority ? 8 : 2, y: 1)
+        .scaleEffect(isHovering ? 1.02 : 1.0)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
                 isHovering = hovering
@@ -70,38 +108,13 @@ struct BoardCardView: View {
     // MARK: - Computed Properties
 
     private var hasMetadata: Bool {
-        task.dueDate != nil ||
-        task.priority != .none ||
-        task.isFlagged ||
-        (task.notes != nil && !task.notes!.isEmpty)
-    }
-
-    // MARK: - Subviews
-
-    private var priorityIndicator: some View {
-        HStack(spacing: 2) {
-            Circle()
-                .fill(priorityColor)
-                .frame(width: 6, height: 6)
-            Text(task.priority.displayName)
-                .font(.caption2)
-                .foregroundColor(priorityColor)
-        }
-    }
-
-    private var priorityColor: Color {
-        switch task.priority {
-        case .high: return .red
-        case .medium: return .orange
-        case .low: return .blue
-        case .none: return .secondary
-        }
+        task.dueDate != nil || (task.notes != nil && !task.notes!.isEmpty)
     }
 
     @ViewBuilder
     private var contextMenu: some View {
         Button {
-            // Toggle complete
+            onToggleComplete?()
         } label: {
             Label(
                 task.status == .completed ? "Mark Incomplete" : "Mark Complete",
@@ -110,7 +123,7 @@ struct BoardCardView: View {
         }
 
         Button {
-            // Toggle flag
+            onToggleFlag?()
         } label: {
             Label(
                 task.isFlagged ? "Remove Flag" : "Add Flag",
@@ -120,23 +133,24 @@ struct BoardCardView: View {
 
         Divider()
 
-        Menu("Set Priority") {
+        Menu("Priority") {
             ForEach(Priority.allCases, id: \.self) { priority in
-                Button(priority.displayName) {
-                    // Set priority
+                Button {
+                    onSetPriority?(priority)
+                } label: {
+                    if task.priority == priority {
+                        Label(priority.displayName, systemImage: "checkmark")
+                    } else {
+                        Text(priority.displayName)
+                    }
                 }
             }
-        }
-
-        Menu("Move to Column") {
-            // Column options would go here
-            Text("Column options...")
         }
 
         Divider()
 
         Button(role: .destructive) {
-            // Delete
+            onDelete?()
         } label: {
             Label("Delete", systemImage: "trash")
         }
@@ -176,29 +190,38 @@ struct BoardCardView: View {
 // MARK: - Preview
 
 #Preview {
-    VStack(spacing: 8) {
+    VStack(spacing: 12) {
+        // High priority with glow
         BoardCardView(
             task: Task(
                 title: "Design the new homepage with updated branding",
                 priority: .high,
-                dueDate: Date(),
+                dueDate: Date()
+            ),
+            tags: [
+                Tag(name: "design", color: "AF52DE", tagType: .tag),
+                Tag(name: "urgent", color: "FF3B30", tagType: .context)
+            ]
+        )
+
+        // Flagged with golden glow
+        BoardCardView(
+            task: Task(
+                title: "Review pull request before release",
+                notes: "Check the API changes",
                 isFlagged: true
-            )
+            ),
+            tags: [Tag(name: "review", color: "007AFF", tagType: .tag)]
         )
 
+        // Normal card
         BoardCardView(
             task: Task(
-                title: "Review pull request",
-                notes: "Check the API changes and ensure backward compatibility"
+                title: "Simple task without priority"
             )
         )
 
-        BoardCardView(
-            task: Task(
-                title: "Simple task"
-            )
-        )
-
+        // Completed card
         BoardCardView(
             task: Task(
                 title: "Completed task",
@@ -206,7 +229,7 @@ struct BoardCardView: View {
             )
         )
     }
-    .padding()
-    .frame(width: 280)
-    .background(Color(nsColor: .controlBackgroundColor))
+    .padding(16)
+    .frame(width: 300)
+    .background(AppTheme.contentBackground)
 }

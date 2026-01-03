@@ -12,6 +12,7 @@ struct Goal: Identifiable, Codable, Equatable, Hashable {
     var status: GoalStatus
     var progress: Double
     var targetDate: Date?
+    var color: String?
     var createdAt: Date
     var updatedAt: Date
 
@@ -25,7 +26,8 @@ struct Goal: Identifiable, Codable, Equatable, Hashable {
         parentGoalId: String? = nil,
         status: GoalStatus = .active,
         progress: Double = 0.0,
-        targetDate: Date? = nil
+        targetDate: Date? = nil,
+        color: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -37,6 +39,7 @@ struct Goal: Identifiable, Codable, Equatable, Hashable {
         self.status = status
         self.progress = progress
         self.targetDate = targetDate
+        self.color = color
         self.createdAt = Date()
         self.updatedAt = Date()
     }

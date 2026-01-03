@@ -57,6 +57,7 @@ enum SidebarSection: Hashable, Identifiable {
     case upcoming
     case flagged
     case calendar
+    case dashboard
     case perspective(String)
     case project(String)
     case goals
@@ -73,6 +74,7 @@ enum SidebarSection: Hashable, Identifiable {
         case .upcoming: return "upcoming"
         case .flagged: return "flagged"
         case .calendar: return "calendar"
+        case .dashboard: return "dashboard"
         case .perspective(let id): return "perspective-\(id)"
         case .project(let id): return "project-\(id)"
         case .goals: return "goals"
@@ -91,6 +93,7 @@ enum SidebarSection: Hashable, Identifiable {
         case .upcoming: return "Upcoming"
         case .flagged: return "Flagged"
         case .calendar: return "Calendar"
+        case .dashboard: return "Dashboard"
         case .perspective: return "Perspective"
         case .project: return "Project"
         case .goals: return "Goals"
@@ -109,6 +112,7 @@ enum SidebarSection: Hashable, Identifiable {
         case .upcoming: return "calendar.badge.clock"
         case .flagged: return "flag"
         case .calendar: return "calendar"
+        case .dashboard: return "rectangle.grid.2x2"
         case .perspective: return "line.3.horizontal.decrease.circle"
         case .project: return "folder"
         case .goals: return "target"

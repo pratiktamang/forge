@@ -62,9 +62,9 @@ final class ActivityViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(repository: ActivityRepository = ActivityRepository(), monitor: ActivityMonitor = .shared) {
+    init(repository: ActivityRepository = ActivityRepository(), monitor: ActivityMonitor? = nil) {
         self.repository = repository
-        self.monitor = monitor
+        self.monitor = monitor ?? ActivityMonitor.shared
     }
 
     // MARK: - Observation

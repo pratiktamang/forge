@@ -174,6 +174,7 @@ struct SidebarView: View {
 
     private var planningSection: some View {
         Section {
+            sidebarRow(.dashboard)
             sidebarRow(.goals)
             sidebarRow(.weeklyReview)
         } header: {
@@ -207,6 +208,10 @@ struct SidebarView: View {
             .foregroundColor(AppTheme.textPrimary)
             .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
             .tag(section)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                appState.selectedSection = section
+            }
     }
 
     @ViewBuilder

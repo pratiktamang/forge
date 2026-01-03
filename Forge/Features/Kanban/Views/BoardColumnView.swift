@@ -26,9 +26,9 @@ struct BoardColumnView: View {
 
             // Tasks
             ScrollView {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: 10) {
                     ForEach(tasks) { task in
-                        BoardCardView(task: task)
+                        BoardCardView(task: task, tags: [])
                             .draggable(TaskDragItem(taskId: task.id, sourceColumnId: column.id))
                     }
 
@@ -45,12 +45,14 @@ struct BoardColumnView: View {
                 addTaskButton
             }
         }
-        .frame(width: 280)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(12)
+        .frame(width: 300)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(AppTheme.cardBackground.opacity(0.5))
+        )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(isTargeted ? Color.accentColor : Color.clear, lineWidth: 2)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isTargeted ? AppTheme.accent : AppTheme.cardBorder.opacity(0.5), lineWidth: isTargeted ? 2 : 1)
         )
         .dropDestination(for: TaskDragItem.self) { items, _ in
             guard let item = items.first else { return false }

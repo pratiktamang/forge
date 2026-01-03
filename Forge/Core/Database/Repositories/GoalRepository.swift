@@ -95,6 +95,10 @@ final class GoalRepository {
         let year: Int
         let yearlyGoals: [Goal]
         let quarterlyGoals: [Int: [Goal]] // Quarter -> Goals
+
+        var allGoals: [Goal] {
+            yearlyGoals + quarterlyGoals.values.flatMap { $0 }
+        }
     }
 
     func fetchGroupedByYear() async throws -> [GoalsByYear] {

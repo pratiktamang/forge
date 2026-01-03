@@ -10,7 +10,7 @@ struct ForgeApp: App {
         do {
             try AppDatabase.shared.setup()
             #if DEBUG
-            try AppDatabase.shared.seedSampleData()
+            try AppDatabase.shared.resetAndSeed()  // TODO: Change back to seedSampleData()
             #endif
         } catch {
             print("❌ Database error: \(error)")

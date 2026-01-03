@@ -53,6 +53,7 @@ final class AppDatabase {
                 t.column("status", .text).notNull().defaults(to: "active")
                 t.column("progress", .double).defaults(to: 0.0)
                 t.column("targetDate", .date)
+                t.column("color", .text)
                 t.column("createdAt", .datetime).notNull()
                 t.column("updatedAt", .datetime).notNull()
             }
@@ -358,17 +359,28 @@ final class AppDatabase {
                 try tag.insert(db)
             }
 
-            // Create a sample goal
-            let goal = Goal(
-                id: "goal-1",
-                title: "Ship product by Q2",
-                description: "Launch the mobile app to customers",
-                goalType: .quarterly,
-                year: Calendar.current.component(.year, from: now),
-                quarter: 2,
-                status: .active
-            )
-            try goal.insert(db)
+            // Create quarterly goals
+            let currentYear = Calendar.current.component(.year, from: now)
+            let goals = [
+                // Q1 Goals - first two completed
+                Goal(id: "goal-q1-1", title: "Ship MVP to beta users", goalType: .quarterly, year: currentYear, quarter: 1, status: .completed, progress: 1.0, color: "EF4444"),
+                Goal(id: "goal-q1-2", title: "Set up CI/CD pipeline", goalType: .quarterly, year: currentYear, quarter: 1, status: .completed, progress: 1.0, color: "3B82F6"),
+                Goal(id: "goal-q1-3", title: "Onboard first 10 users", goalType: .quarterly, year: currentYear, quarter: 1, status: .active, progress: 0.6, color: "F59E0B"),
+                Goal(id: "goal-q1-4", title: "Implement analytics", goalType: .quarterly, year: currentYear, quarter: 1, status: .active, progress: 0.2, color: "8B5CF6"),
+
+                // Q2 Goals
+                Goal(id: "goal-q2-1", title: "Launch iOS app on App Store", goalType: .quarterly, year: currentYear, quarter: 2, status: .active, color: "10B981"),
+                Goal(id: "goal-q2-2", title: "Reach 100 active users", goalType: .quarterly, year: currentYear, quarter: 2, status: .active, color: "F59E0B"),
+                Goal(id: "goal-q2-3", title: "Implement sync engine", goalType: .quarterly, year: currentYear, quarter: 2, status: .active, color: "3B82F6"),
+
+                // Q3 Goals
+                Goal(id: "goal-q3-1", title: "Launch Mac app", goalType: .quarterly, year: currentYear, quarter: 3, status: .active, color: "6366F1"),
+                Goal(id: "goal-q3-2", title: "First paying customer", goalType: .quarterly, year: currentYear, quarter: 3, status: .active, color: "10B981"),
+                Goal(id: "goal-q3-3", title: "Add collaboration features", goalType: .quarterly, year: currentYear, quarter: 3, status: .active, color: "EC4899"),
+            ]
+            for goal in goals {
+                try goal.insert(db)
+            }
 
             // Create a sample habit
             let habit = Habit(

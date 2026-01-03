@@ -23,14 +23,14 @@ struct Board: Identifiable, Codable, Equatable, Hashable {
         self.updatedAt = Date()
     }
 
-    /// Create a board with default columns
+    /// Create a board with Fizzy-inspired default columns
     static func createWithDefaultColumns(title: String, projectId: String? = nil) -> (Board, [BoardColumn]) {
         let board = Board(title: title, projectId: projectId, isDefault: true)
 
         let columns = [
-            BoardColumn(boardId: board.id, title: "To Do", color: "#6B7280", sortOrder: 0, mapsToStatus: "next"),
-            BoardColumn(boardId: board.id, title: "In Progress", color: "#3B82F6", sortOrder: 1, mapsToStatus: "next"),
-            BoardColumn(boardId: board.id, title: "Review", color: "#F59E0B", sortOrder: 2, mapsToStatus: "waiting"),
+            BoardColumn(boardId: board.id, title: "Not Now", color: "#9CA3AF", sortOrder: 0, mapsToStatus: "someday"),
+            BoardColumn(boardId: board.id, title: "To Do", color: "#6B7280", sortOrder: 1, mapsToStatus: "next"),
+            BoardColumn(boardId: board.id, title: "In Progress", color: "#3B82F6", sortOrder: 2, mapsToStatus: "next"),
             BoardColumn(boardId: board.id, title: "Done", color: "#22C55E", sortOrder: 3, mapsToStatus: "completed")
         ]
 
