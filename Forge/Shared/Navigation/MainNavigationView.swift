@@ -5,7 +5,15 @@ private typealias AsyncTask = _Concurrency.Task
 
 struct MainNavigationView: View {
     @EnvironmentObject var appState: AppState
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+
+    private var hasDetailSelection: Bool {
+        appState.selectedTaskId != nil ||
+        appState.selectedNoteId != nil ||
+        appState.selectedGoalId != nil ||
+        appState.selectedInitiativeId != nil ||
+        appState.selectedHabitId != nil
+    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -13,11 +21,10 @@ struct MainNavigationView: View {
         } content: {
             ContentListView()
         } detail: {
-            if appState.isInBoardMode {
-                // Empty view when board is shown - board takes full content width
-                Color.clear
-            } else {
+            if hasDetailSelection && !appState.isInBoardMode {
                 DetailView()
+            } else {
+                Color.clear
             }
         }
         .navigationSplitViewStyle(.balanced)
@@ -28,9 +35,14 @@ struct MainNavigationView: View {
         .sheet(isPresented: $appState.showQuickCapture) {
             QuickCaptureView()
         }
+        .onChange(of: hasDetailSelection) { _, hasSelection in
+            withAnimation {
+                columnVisibility = (hasSelection && !appState.isInBoardMode) ? .all : .doubleColumn
+            }
+        }
         .onChange(of: appState.isInBoardMode) { _, isBoard in
             withAnimation {
-                columnVisibility = isBoard ? .doubleColumn : .all
+                columnVisibility = isBoard ? .doubleColumn : (hasDetailSelection ? .all : .doubleColumn)
             }
         }
     }
@@ -154,7 +166,7 @@ struct ProjectContentView: View {
 
     @ViewBuilder
     private func projectHeader(_ project: Project) -> some View {
-        let iconColor: Color = project.color.flatMap { Color(hex: $0) } ?? .accentColor
+        let iconColor: Color = project.color.flatMap { Color(hex: $0) } ?? AppTheme.accent
         let totalTasks = taskCount + completedCount
         let progress: Double = totalTasks > 0 ? Double(completedCount) / Double(totalTasks) : 0
 

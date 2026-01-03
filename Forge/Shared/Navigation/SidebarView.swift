@@ -17,8 +17,8 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $appState.selectedSection) {
             perspectivesSection
-            customViewsSection
             projectsSection
+            customViewsSection
             planningSection
             notesSection
             trackingSection
@@ -211,16 +211,17 @@ struct SidebarView: View {
 
     @ViewBuilder
     private func perspectiveRow(_ perspective: Perspective) -> some View {
-        let colorValue: Color = perspective.color.flatMap { Color(hex: $0) } ?? .accentColor
+        let colorValue: Color = perspective.color.flatMap { Color(hex: $0) } ?? AppTheme.accent
+
         Label {
             Text(perspective.title)
         } icon: {
             Image(systemName: perspective.icon)
                 .foregroundColor(colorValue)
         }
-        .tag(SidebarSection.perspective(perspective.id))
         .font(rowFont)
         .foregroundColor(AppTheme.textPrimary)
+        .tag(SidebarSection.perspective(perspective.id))
         .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
         .contextMenu {
             Button("Edit") {
@@ -230,10 +231,6 @@ struct SidebarView: View {
                 AsyncTask { await perspectiveViewModel.deletePerspective(perspective) }
             }
         }
-    }
-
-    private var rowBackground: some View {
-        Color.clear
     }
 
     private struct SidebarSectionHeader: View {

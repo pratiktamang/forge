@@ -80,7 +80,7 @@ struct TaskRowView: View {
                 // Flag button
                 Button(action: onToggleFlag) {
                     Image(systemName: task.isFlagged ? "flag.fill" : "flag")
-                        .foregroundColor(task.isFlagged ? AppTheme.accent : AppTheme.metadataText)
+                        .foregroundColor(task.isFlagged ? Color(hex: "E07A3F") : AppTheme.metadataText)
                 }
                 .buttonStyle(.plain)
                 .opacity(isHovering || task.isFlagged ? 1 : 0)
@@ -127,7 +127,7 @@ struct TaskRowView: View {
 
     private var priorityColor: Color {
         switch task.priority {
-        case .high: return AppTheme.accent
+        case .high: return Color(hex: "E07A3F")
         case .medium: return AppTheme.sidebarHeaderText
         case .low: return AppTheme.metadataText
         case .none: return AppTheme.metadataText
@@ -249,7 +249,7 @@ struct TaskRowView: View {
         let dueDay = calendar.startOfDay(for: date)
 
         if dueDay < today {
-            return AppTheme.accent // Overdue
+            return Color(hex: "E07A3F") // Overdue
         } else if calendar.isDateInToday(date) {
             return AppTheme.sidebarHeaderText // Due today
         } else if calendar.isDateInTomorrow(date) {
