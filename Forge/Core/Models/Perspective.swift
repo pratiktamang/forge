@@ -34,41 +34,35 @@ struct Perspective: Identifiable, Codable, Equatable, Hashable {
 
 struct FilterConfig: Codable, Equatable, Hashable {
     var statuses: [TaskStatus]?
-    var priorities: [Priority]?
     var projectIds: [String]?
     var tagIds: [String]?
     var isFlagged: Bool?
     var hasDueDate: Bool?
     var isOverdue: Bool?
     var dueDateRange: DateRangeFilter?
-    var deferDateRange: DateRangeFilter?
     var showCompleted: Bool
     var sortBy: SortOption
     var sortAscending: Bool
 
     init(
         statuses: [TaskStatus]? = nil,
-        priorities: [Priority]? = nil,
         projectIds: [String]? = nil,
         tagIds: [String]? = nil,
         isFlagged: Bool? = nil,
         hasDueDate: Bool? = nil,
         isOverdue: Bool? = nil,
         dueDateRange: DateRangeFilter? = nil,
-        deferDateRange: DateRangeFilter? = nil,
         showCompleted: Bool = false,
         sortBy: SortOption = .dueDate,
         sortAscending: Bool = true
     ) {
         self.statuses = statuses
-        self.priorities = priorities
         self.projectIds = projectIds
         self.tagIds = tagIds
         self.isFlagged = isFlagged
         self.hasDueDate = hasDueDate
         self.isOverdue = isOverdue
         self.dueDateRange = dueDateRange
-        self.deferDateRange = deferDateRange
         self.showCompleted = showCompleted
         self.sortBy = sortBy
         self.sortAscending = sortAscending
@@ -76,14 +70,12 @@ struct FilterConfig: Codable, Equatable, Hashable {
 
     var isEmpty: Bool {
         statuses == nil &&
-        priorities == nil &&
         projectIds == nil &&
         tagIds == nil &&
         isFlagged == nil &&
         hasDueDate == nil &&
         isOverdue == nil &&
-        dueDateRange == nil &&
-        deferDateRange == nil
+        dueDateRange == nil
     }
 }
 
@@ -153,8 +145,6 @@ enum DateRangeFilter: String, Codable, CaseIterable {
 
 enum SortOption: String, Codable, CaseIterable {
     case dueDate
-    case deferDate
-    case priority
     case title
     case createdAt
     case updatedAt
@@ -162,8 +152,6 @@ enum SortOption: String, Codable, CaseIterable {
     var displayName: String {
         switch self {
         case .dueDate: return "Due Date"
-        case .deferDate: return "Defer Date"
-        case .priority: return "Priority"
         case .title: return "Title"
         case .createdAt: return "Created"
         case .updatedAt: return "Updated"
@@ -193,12 +181,12 @@ extension Perspective: FetchableRecord, PersistableRecord {
 extension Perspective {
     static let defaults: [Perspective] = [
         Perspective(
-            title: "High Priority",
-            icon: "exclamationmark.circle.fill",
+            title: "Flagged",
+            icon: "flag.fill",
             color: "#EF4444",
             sortOrder: 0,
             filterConfig: FilterConfig(
-                priorities: [.high],
+                isFlagged: true,
                 showCompleted: false,
                 sortBy: .dueDate,
                 sortAscending: true

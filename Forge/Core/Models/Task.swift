@@ -9,8 +9,6 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
     var boardColumnId: String?
     var parentTaskId: String?
     var status: TaskStatus
-    var priority: Priority
-    var deferDate: Date?
     var dueDate: Date?
     var completedAt: Date?
     var isFlagged: Bool
@@ -29,8 +27,6 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         boardColumnId: String? = nil,
         parentTaskId: String? = nil,
         status: TaskStatus = .inbox,
-        priority: Priority = .none,
-        deferDate: Date? = nil,
         dueDate: Date? = nil,
         isFlagged: Bool = false,
         estimatedMinutes: Int? = nil,
@@ -43,8 +39,6 @@ struct Task: Identifiable, Codable, Equatable, Hashable {
         self.boardColumnId = boardColumnId
         self.parentTaskId = parentTaskId
         self.status = status
-        self.priority = priority
-        self.deferDate = deferDate
         self.dueDate = dueDate
         self.completedAt = nil
         self.isFlagged = isFlagged
@@ -144,44 +138,6 @@ enum TaskStatus: String, Codable, CaseIterable {
         case .completed: return "checkmark.circle.fill"
         case .cancelled: return "xmark.circle"
         }
-    }
-}
-
-enum Priority: String, Codable, CaseIterable, Comparable {
-    case none
-    case low
-    case medium
-    case high
-
-    var displayName: String {
-        switch self {
-        case .none: return "None"
-        case .low: return "Low"
-        case .medium: return "Medium"
-        case .high: return "High"
-        }
-    }
-
-    var color: String {
-        switch self {
-        case .none: return "#6B7280"
-        case .low: return "#3B82F6"
-        case .medium: return "#F59E0B"
-        case .high: return "#EF4444"
-        }
-    }
-
-    private var sortValue: Int {
-        switch self {
-        case .none: return 0
-        case .low: return 1
-        case .medium: return 2
-        case .high: return 3
-        }
-    }
-
-    static func < (lhs: Priority, rhs: Priority) -> Bool {
-        lhs.sortValue < rhs.sortValue
     }
 }
 

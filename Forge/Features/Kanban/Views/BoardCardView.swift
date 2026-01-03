@@ -5,27 +5,24 @@ struct BoardCardView: View {
     let tags: [Tag]
     var onToggleComplete: (() -> Void)?
     var onToggleFlag: (() -> Void)?
-    var onSetPriority: ((Priority) -> Void)?
     var onDelete: (() -> Void)?
 
     @State private var isHovering = false
 
-    init(task: Task, tags: [Tag] = [], onToggleComplete: (() -> Void)? = nil, onToggleFlag: (() -> Void)? = nil, onSetPriority: ((Priority) -> Void)? = nil, onDelete: (() -> Void)? = nil) {
+    init(task: Task, tags: [Tag] = [], onToggleComplete: (() -> Void)? = nil, onToggleFlag: (() -> Void)? = nil, onDelete: (() -> Void)? = nil) {
         self.task = task
         self.tags = tags
         self.onToggleComplete = onToggleComplete
         self.onToggleFlag = onToggleFlag
-        self.onSetPriority = onSetPriority
         self.onDelete = onDelete
     }
 
-    private var isHighPriority: Bool {
-        task.priority == .high || task.isFlagged
+    private var isFlaggedCard: Bool {
+        task.isFlagged
     }
 
     private var glowColor: Color {
-        if task.priority == .high { return Color.orange }
-        if task.isFlagged { return Color.yellow }
+        if task.isFlagged { return Color.orange }
         return Color.clear
     }
 
@@ -91,9 +88,9 @@ struct BoardCardView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(isHighPriority ? glowColor.opacity(0.6) : AppTheme.cardBorder, lineWidth: isHighPriority ? 2 : 1)
+                .stroke(isFlaggedCard ? glowColor.opacity(0.6) : AppTheme.cardBorder, lineWidth: isFlaggedCard ? 2 : 1)
         )
-        .shadow(color: isHighPriority ? glowColor.opacity(0.3) : .black.opacity(0.05), radius: isHighPriority ? 8 : 2, y: 1)
+        .shadow(color: isFlaggedCard ? glowColor.opacity(0.3) : .black.opacity(0.05), radius: isFlaggedCard ? 8 : 2, y: 1)
         .scaleEffect(isHovering ? 1.02 : 1.0)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
@@ -129,22 +126,6 @@ struct BoardCardView: View {
                 task.isFlagged ? "Remove Flag" : "Add Flag",
                 systemImage: task.isFlagged ? "flag.slash" : "flag"
             )
-        }
-
-        Divider()
-
-        Menu("Priority") {
-            ForEach(Priority.allCases, id: \.self) { priority in
-                Button {
-                    onSetPriority?(priority)
-                } label: {
-                    if task.priority == priority {
-                        Label(priority.displayName, systemImage: "checkmark")
-                    } else {
-                        Text(priority.displayName)
-                    }
-                }
-            }
         }
 
         Divider()
@@ -191,12 +172,12 @@ struct BoardCardView: View {
 
 #Preview {
     VStack(spacing: 12) {
-        // High priority with glow
+        // Flagged task with glow
         BoardCardView(
             task: Task(
                 title: "Design the new homepage with updated branding",
-                priority: .high,
-                dueDate: Date()
+                dueDate: Date(),
+                isFlagged: true
             ),
             tags: [
                 Tag(name: "design", color: "AF52DE", tagType: .tag),
@@ -204,12 +185,11 @@ struct BoardCardView: View {
             ]
         )
 
-        // Flagged with golden glow
+        // Task with notes
         BoardCardView(
             task: Task(
                 title: "Review pull request before release",
-                notes: "Check the API changes",
-                isFlagged: true
+                notes: "Check the API changes"
             ),
             tags: [Tag(name: "review", color: "007AFF", tagType: .tag)]
         )
@@ -217,7 +197,7 @@ struct BoardCardView: View {
         // Normal card
         BoardCardView(
             task: Task(
-                title: "Simple task without priority"
+                title: "Simple task"
             )
         )
 

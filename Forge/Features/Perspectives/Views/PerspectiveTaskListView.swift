@@ -116,12 +116,6 @@ struct PerspectiveTaskRow: View {
                 }
 
                 HStack(spacing: 8) {
-                    if task.priority != .none {
-                        Text(task.priority.displayName)
-                            .font(.caption)
-                            .foregroundColor(Color(hex: task.priority.color))
-                    }
-
                     if let dueDate = task.dueDate {
                         Label(formatDate(dueDate), systemImage: "calendar")
                             .font(.caption)

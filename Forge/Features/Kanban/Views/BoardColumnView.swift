@@ -225,7 +225,7 @@ struct BoardColumnView: View {
             column: BoardColumn(boardId: "1", title: "To Do", color: "#6B7280", sortOrder: 0),
             tasks: [
                 Task(title: "Design homepage"),
-                Task(title: "Write documentation", priority: .high)
+                Task(title: "Write documentation", isFlagged: true)
             ],
             isOverWipLimit: false,
             onAddTask: { _ in },

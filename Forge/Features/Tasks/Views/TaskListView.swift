@@ -47,9 +47,6 @@ struct TaskListView: View {
                             onToggleFlag: {
                                 AsyncTask { await viewModel.toggleFlag(task) }
                             },
-                            onSetPriority: { priority in
-                                AsyncTask { await viewModel.setPriority(task, priority: priority) }
-                            },
                             onSetStatus: { status in
                                 AsyncTask { await viewModel.setStatus(task, status: status) }
                             },

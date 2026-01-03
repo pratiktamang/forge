@@ -184,12 +184,6 @@ final class TaskViewModel: ObservableObject {
         await updateTask(updated)
     }
 
-    func setPriority(_ task: Task, priority: Priority) async {
-        var updated = task
-        updated.priority = priority
-        await updateTask(updated)
-    }
-
     func setStatus(_ task: Task, status: TaskStatus) async {
         var updated = task
         updated.status = status

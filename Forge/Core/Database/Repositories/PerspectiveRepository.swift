@@ -91,12 +91,6 @@ final class PerspectiveRepository {
                     .filter(Column("status") != TaskStatus.cancelled.rawValue)
             }
 
-            // Priority filter
-            if let priorities = config.priorities, !priorities.isEmpty {
-                let priorityValues = priorities.map { $0.rawValue }
-                request = request.filter(priorityValues.contains(Column("priority")))
-            }
-
             // Project filter
             if let projectIds = config.projectIds, !projectIds.isEmpty {
                 request = request.filter(projectIds.contains(Column("projectId")))
@@ -131,18 +125,6 @@ final class PerspectiveRepository {
                 }
             }
 
-            // Defer date range filter
-            if let deferDateRange = config.deferDateRange {
-                let (start, end) = deferDateRange.dateRange()
-                if deferDateRange == .noDate {
-                    request = request.filter(Column("deferDate") == nil)
-                } else if let start = start, let end = end {
-                    request = request
-                        .filter(Column("deferDate") >= start)
-                        .filter(Column("deferDate") < end)
-                }
-            }
-
             // Only top-level tasks
             request = request.filter(Column("parentTaskId") == nil)
 
@@ -152,14 +134,6 @@ final class PerspectiveRepository {
                 request = config.sortAscending
                     ? request.order(Column("dueDate").ascNullsLast)
                     : request.order(Column("dueDate").desc)
-            case .deferDate:
-                request = config.sortAscending
-                    ? request.order(Column("deferDate").ascNullsLast)
-                    : request.order(Column("deferDate").desc)
-            case .priority:
-                request = config.sortAscending
-                    ? request.order(Column("priority").asc)
-                    : request.order(Column("priority").desc)
             case .title:
                 request = config.sortAscending
                     ? request.order(Column("title").asc)

@@ -6,7 +6,6 @@ private typealias AsyncTask = _Concurrency.Task
 struct TaskDetailView: View {
     @StateObject private var viewModel: TaskDetailViewModel
     @State private var newSubtaskTitle = ""
-    @State private var isHoveringProperties = false
     @State private var isDuePickerPresented = false
     @State private var isDeferPickerPresented = false
     @FocusState private var isTitleFocused: Bool
@@ -115,10 +114,10 @@ struct TaskDetailView: View {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
         let nextWeek = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: today) ?? today
 
-        HStack(spacing: 2) {
+        HStack(spacing: 6) {
             // Project pill
             PropertyPill(
-                icon: "folder",
+                icon: "folder.fill",
                 value: projectSummary(task),
                 color: projectColor(task)
             ) {
@@ -134,8 +133,6 @@ struct TaskDetailView: View {
                     }
                 }
             }
-
-            pillSeparator
 
             // Status pill
             PropertyPill(
@@ -158,33 +155,8 @@ struct TaskDetailView: View {
                 }
             }
 
-            // Priority pill (only show if set)
-            if task.priority != .none {
-                pillSeparator
-                PropertyPill(
-                    icon: "bolt.fill",
-                    value: task.priority.displayName,
-                    color: priorityColor(task.priority)
-                ) {
-                    ForEach(Priority.allCases, id: \.self) { priority in
-                        Button {
-                            viewModel.task?.priority = priority
-                            AsyncTask { await viewModel.save() }
-                        } label: {
-                            HStack {
-                                Text(priority.displayName)
-                                if task.priority == priority {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             // Due date pill (only show if set)
             if task.dueDate != nil {
-                pillSeparator
                 PropertyPill(
                     icon: "calendar",
                     value: dateSummary(task.dueDate),
@@ -227,56 +199,29 @@ struct TaskDetailView: View {
                 }
             }
 
-            // Flag indicator
+            // Flag pill
             if task.isFlagged {
-                pillSeparator
-                Button {
-                    viewModel.task?.isFlagged = false
-                    AsyncTask { await viewModel.save() }
-                } label: {
-                    Image(systemName: "flag.fill")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.orange)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                PropertyPill(
+                    icon: "flag.fill",
+                    value: "Flagged",
+                    color: .orange
+                ) {
+                    Button("Remove Flag") {
+                        viewModel.task?.isFlagged = false
+                        AsyncTask { await viewModel.save() }
+                    }
                 }
-                .buttonStyle(.plain)
             }
 
-            Spacer()
-
-            // Add property button (shows on hover)
+            // Add property button
             addPropertyMenu(task, today: today, tomorrow: tomorrow, nextWeek: nextWeek)
         }
         .padding(.leading, 36) // Align with title (after checkbox)
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isHoveringProperties = hovering
-            }
-        }
-    }
-
-    private var pillSeparator: some View {
-        Text("·")
-            .font(.system(size: 10))
-            .foregroundColor(AppTheme.textSecondary.opacity(0.5))
-            .padding(.horizontal, 2)
     }
 
     @ViewBuilder
     private func addPropertyMenu(_ task: Task, today: Date, tomorrow: Date, nextWeek: Date) -> some View {
         Menu {
-            if task.priority == .none {
-                Menu("Priority") {
-                    ForEach(Priority.allCases, id: \.self) { priority in
-                        Button(priority.displayName) {
-                            viewModel.task?.priority = priority
-                            AsyncTask { await viewModel.save() }
-                        }
-                    }
-                }
-            }
-
             if task.dueDate == nil {
                 Menu("Due Date") {
                     Button("Today") {
@@ -289,19 +234,6 @@ struct TaskDetailView: View {
                     }
                     Button("Next Week") {
                         viewModel.task?.dueDate = nextWeek
-                        AsyncTask { await viewModel.save() }
-                    }
-                }
-            }
-
-            if task.deferDate == nil {
-                Menu("Defer Until") {
-                    Button("Tomorrow") {
-                        viewModel.task?.deferDate = tomorrow
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Next Week") {
-                        viewModel.task?.deferDate = nextWeek
                         AsyncTask { await viewModel.save() }
                     }
                 }
@@ -323,12 +255,17 @@ struct TaskDetailView: View {
                 }
             }
         } label: {
-            Image(systemName: "plus.circle")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            Image(systemName: "plus")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(AppTheme.textSecondary)
+                .padding(5)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(AppTheme.textSecondary.opacity(0.08))
+                )
         }
         .menuStyle(.borderlessButton)
-        .opacity(isHoveringProperties ? 1 : 0)
+        .menuIndicator(.hidden)
     }
 
     // MARK: - Property Helpers
@@ -370,15 +307,6 @@ struct TaskDetailView: View {
         case .someday: return .gray
         case .completed: return .green
         case .cancelled: return .red
-        }
-    }
-
-    private func priorityColor(_ priority: Priority) -> Color {
-        switch priority {
-        case .none: return .secondary
-        case .low: return .blue
-        case .medium: return .orange
-        case .high: return .red
         }
     }
 
@@ -500,6 +428,7 @@ struct PropertyPill<MenuContent: View>: View {
     let icon: String
     let value: String
     let color: Color
+    var showBackground: Bool = true
     @ViewBuilder let menuContent: () -> MenuContent
     @State private var isHovered = false
 
@@ -509,23 +438,23 @@ struct PropertyPill<MenuContent: View>: View {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 9, weight: .semibold))
                 Text(value)
                     .font(.system(size: 11, weight: .medium))
             }
-            .foregroundColor(isHovered ? color : AppTheme.textSecondary)
+            .foregroundColor(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isHovered ? color.opacity(0.12) : Color.clear)
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(showBackground ? color.opacity(isHovered ? 0.18 : 0.1) : (isHovered ? color.opacity(0.1) : Color.clear))
             )
-            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
+            withAnimation(.easeInOut(duration: 0.12)) {
                 isHovered = hovering
             }
         }

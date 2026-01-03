@@ -166,30 +166,6 @@ struct PerspectiveEditorSheet: View {
                 }
             }
 
-            // Priority filter
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Priority")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-
-                HStack(spacing: 8) {
-                    ForEach(Priority.allCases.filter { $0 != .none }, id: \.self) { priority in
-                        FilterChip(
-                            label: priority.displayName,
-                            color: Color(hex: priority.color),
-                            isSelected: viewModel.selectedPriorities.contains(priority),
-                            action: {
-                                if viewModel.selectedPriorities.contains(priority) {
-                                    viewModel.selectedPriorities.remove(priority)
-                                } else {
-                                    viewModel.selectedPriorities.insert(priority)
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-
             // Due date filter
             VStack(alignment: .leading, spacing: 8) {
                 Text("Due Date")

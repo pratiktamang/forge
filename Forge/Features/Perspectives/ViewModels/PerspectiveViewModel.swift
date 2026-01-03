@@ -194,7 +194,6 @@ final class PerspectiveEditorViewModel: ObservableObject {
 
     // Filter config
     @Published var selectedStatuses: Set<TaskStatus> = []
-    @Published var selectedPriorities: Set<Priority> = []
     @Published var isFlagged: Bool? = nil
     @Published var dueDateRange: DateRangeFilter? = nil
     @Published var showCompleted: Bool = false
@@ -236,7 +235,6 @@ final class PerspectiveEditorViewModel: ObservableObject {
 
         let config = FilterConfig(
             statuses: selectedStatuses.isEmpty ? nil : Array(selectedStatuses),
-            priorities: selectedPriorities.isEmpty ? nil : Array(selectedPriorities),
             isFlagged: isFlagged,
             dueDateRange: dueDateRange,
             showCompleted: showCompleted,
@@ -270,7 +268,6 @@ final class PerspectiveEditorViewModel: ObservableObject {
 
         let config = perspective.filterConfig
         selectedStatuses = Set(config.statuses ?? [])
-        selectedPriorities = Set(config.priorities ?? [])
         isFlagged = config.isFlagged
         dueDateRange = config.dueDateRange
         showCompleted = config.showCompleted

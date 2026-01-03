@@ -126,8 +126,6 @@ final class AppDatabase {
                 t.column("boardColumnId", .text).references("boardColumns", onDelete: .setNull)
                 t.column("parentTaskId", .text).references("tasks", onDelete: .cascade)
                 t.column("status", .text).notNull().defaults(to: "inbox")
-                t.column("priority", .text).notNull().defaults(to: "none")
-                t.column("deferDate", .date)
                 t.column("dueDate", .date)
                 t.column("completedAt", .datetime)
                 t.column("isFlagged", .boolean).defaults(to: false)
@@ -263,7 +261,6 @@ final class AppDatabase {
             try db.create(index: "idx_tasks_project", on: "tasks", columns: ["projectId"])
             try db.create(index: "idx_tasks_status", on: "tasks", columns: ["status"])
             try db.create(index: "idx_tasks_dueDate", on: "tasks", columns: ["dueDate"])
-            try db.create(index: "idx_tasks_deferDate", on: "tasks", columns: ["deferDate"])
             try db.create(index: "idx_notes_dailyDate", on: "notes", columns: ["dailyDate"])
             try db.create(index: "idx_activityLogs_date", on: "activityLogs", columns: ["date"])
             try db.create(index: "idx_habitCompletions_date", on: "habitCompletions", columns: ["completedDate"])
@@ -326,13 +323,13 @@ final class AppDatabase {
             // Create sample tasks
             let tasks: [Task] = [
                 // Website Redesign tasks
-                Task(id: "task-1", title: "Design homepage mockup", projectId: "proj-1", status: .next, priority: .high, dueDate: Calendar.current.date(byAdding: .day, value: 2, to: now)),
-                Task(id: "task-2", title: "Set up new hosting", projectId: "proj-1", status: .next, priority: .medium),
+                Task(id: "task-1", title: "Design homepage mockup", projectId: "proj-1", status: .next, dueDate: Calendar.current.date(byAdding: .day, value: 2, to: now)),
+                Task(id: "task-2", title: "Set up new hosting", projectId: "proj-1", status: .next),
                 Task(id: "task-3", title: "Migrate content", projectId: "proj-1", status: .inbox),
 
                 // Mobile App tasks
                 Task(id: "task-4", title: "Create project in Xcode", projectId: "proj-2", status: .completed),
-                Task(id: "task-5", title: "Design app icon", projectId: "proj-2", status: .next, priority: .low, dueDate: Calendar.current.date(byAdding: .day, value: 7, to: now)),
+                Task(id: "task-5", title: "Design app icon", projectId: "proj-2", status: .next, dueDate: Calendar.current.date(byAdding: .day, value: 7, to: now)),
                 Task(id: "task-6", title: "Implement login screen", projectId: "proj-2", status: .next, isFlagged: true),
 
                 // Learn Swift tasks
@@ -340,7 +337,7 @@ final class AppDatabase {
                 Task(id: "task-8", title: "Build sample project", projectId: "proj-3", status: .inbox),
 
                 // Inbox tasks (no project)
-                Task(id: "task-9", title: "Call dentist", status: .inbox, priority: .high),
+                Task(id: "task-9", title: "Call dentist", status: .inbox, isFlagged: true),
                 Task(id: "task-10", title: "Buy groceries", status: .inbox, isFlagged: true),
                 Task(id: "task-11", title: "Review quarterly goals", status: .inbox, dueDate: Calendar.current.date(byAdding: .day, value: 1, to: now)),
             ]

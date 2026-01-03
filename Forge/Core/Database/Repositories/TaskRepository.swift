@@ -65,14 +65,11 @@ final class TaskRepository {
                 .filter(
                     // Due today or overdue
                     (Column("dueDate") < tomorrow) ||
-                    // Or deferred until today or earlier
-                    (Column("deferDate") != nil && Column("deferDate") <= today) ||
                     // Or flagged
                     (Column("isFlagged") == true)
                 )
                 .order(
                     Column("dueDate").ascNullsLast,
-                    Column("priority").desc,
                     Column("createdAt").desc
                 )
                 .fetchAll(db)
@@ -209,12 +206,11 @@ final class TaskRepository {
                 .filter(Column("status") != TaskStatus.cancelled.rawValue)
                 .filter(
                     (Column("dueDate") < tomorrow) ||
-                    (Column("deferDate") != nil && Column("deferDate") <= today) ||
                     (Column("isFlagged") == true)
                 )
                 .order(
                     Column("dueDate").ascNullsLast,
-                    Column("priority").desc
+                    Column("createdAt").desc
                 )
                 .fetchAll(db)
         }
@@ -312,7 +308,6 @@ final class TaskRepository {
                 .filter(Column("parentTaskId") == nil)
                 .order(
                     Column("status").asc,
-                    Column("priority").desc,
                     Column("createdAt").desc
                 )
                 .fetchAll(db)
@@ -329,7 +324,7 @@ final class TaskRepository {
                 .filter(Column("dueDate") >= start)
                 .filter(Column("dueDate") < end)
                 .filter(Column("parentTaskId") == nil)
-                .order(Column("dueDate").asc, Column("priority").desc)
+                .order(Column("dueDate").asc, Column("createdAt").desc)
                 .fetchAll(db)
         }
     }
@@ -369,7 +364,6 @@ final class TaskRepository {
                 .filter(Column("parentTaskId") == nil)
                 .order(
                     Column("status").asc,
-                    Column("priority").desc,
                     Column("createdAt").desc
                 )
                 .fetchAll(db)
@@ -386,7 +380,7 @@ final class TaskRepository {
                 .filter(Column("dueDate") >= start)
                 .filter(Column("dueDate") < end)
                 .filter(Column("parentTaskId") == nil)
-                .order(Column("dueDate").asc, Column("priority").desc)
+                .order(Column("dueDate").asc, Column("createdAt").desc)
                 .fetchAll(db)
         }
     }

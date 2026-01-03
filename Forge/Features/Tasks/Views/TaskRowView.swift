@@ -14,7 +14,6 @@ struct TaskRowView: View {
     var style: Style = .standard
     let onToggleComplete: () -> Void
     let onToggleFlag: () -> Void
-    var onSetPriority: ((Priority) -> Void)? = nil
     var onSetStatus: ((TaskStatus) -> Void)? = nil
     var onDelete: (() -> Void)? = nil
     var onMoveUp: (() -> Void)? = nil
@@ -54,21 +53,6 @@ struct TaskRowView: View {
                             }
                             .font(.system(size: 13 * textScale))
                             .foregroundColor(dueDateColor(dueDate))
-                        }
-
-                        // Defer date
-                        if let deferDate = task.deferDate, task.dueDate == nil {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.right.circle")
-                                Text("Starts \(formatDueDate(deferDate))")
-                            }
-                            .font(.system(size: 13 * textScale))
-                            .foregroundColor(.orange)
-                        }
-
-                        // Priority
-                        if task.priority != .none {
-                            priorityBadge
                         }
 
                         // Notes indicator
@@ -120,8 +104,6 @@ struct TaskRowView: View {
 
     private var hasMetadata: Bool {
         task.dueDate != nil ||
-        task.deferDate != nil ||
-        task.priority != .none ||
         (task.notes != nil && !task.notes!.isEmpty)
     }
 
@@ -144,24 +126,6 @@ struct TaskRowView: View {
     }
 
     // MARK: - Subviews
-
-    private var priorityBadge: some View {
-        HStack(spacing: 3) {
-            Image(systemName: "exclamationmark.circle.fill")
-            Text(task.priority.displayName)
-        }
-        .font(.system(size: 13 * textScale))
-        .foregroundColor(priorityColor)
-    }
-
-    private var priorityColor: Color {
-        switch task.priority {
-        case .high: return Color(hex: "E07A3F")
-        case .medium: return AppTheme.sidebarHeaderText
-        case .low: return AppTheme.metadataText
-        case .none: return AppTheme.metadataText
-        }
-    }
 
     private var statusBadge: some View {
         Text(task.status.displayName)
@@ -190,19 +154,6 @@ struct TaskRowView: View {
         }
 
         Divider()
-
-        Menu("Priority") {
-            ForEach(Priority.allCases, id: \.self) { priority in
-                Button(action: { onSetPriority?(priority) }) {
-                    HStack {
-                        Text(priority.displayName)
-                        if task.priority == priority {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
-        }
 
         Menu("Status") {
             ForEach([TaskStatus.inbox, .next, .waiting, .scheduled, .someday], id: \.self) { status in
@@ -309,7 +260,7 @@ struct TaskRowView: View {
 #Preview {
     VStack(spacing: 0) {
         TaskRowView(
-            task: Task(title: "Buy groceries", priority: .high, dueDate: Date(), isFlagged: true),
+            task: Task(title: "Buy groceries", dueDate: Date(), isFlagged: true),
             onToggleComplete: {},
             onToggleFlag: {}
         )

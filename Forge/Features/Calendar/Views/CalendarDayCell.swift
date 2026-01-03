@@ -87,17 +87,13 @@ struct CalendarDayCell: View {
         if task.status == .completed {
             return .green
         }
-
-        switch task.priority {
-        case .high:
-            return .red
-        case .medium:
+        if task.isFlagged {
             return .orange
-        case .low:
-            return .blue
-        case .none:
-            return .secondary
         }
+        if task.isOverdue {
+            return .red
+        }
+        return .secondary
     }
 }
 
@@ -116,8 +112,8 @@ struct CalendarDayCell: View {
         CalendarDayCell(
             date: Date(),
             tasks: [
-                Task(title: "High priority", priority: .high),
-                Task(title: "Medium", priority: .medium)
+                Task(title: "Flagged task", isFlagged: true),
+                Task(title: "Normal task")
             ],
             isSelected: true,
             isToday: false,
