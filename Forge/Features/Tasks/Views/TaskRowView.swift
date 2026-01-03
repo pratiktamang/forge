@@ -42,48 +42,19 @@ struct TaskRowView: View {
                     .foregroundColor(task.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
                     .lineLimit(2)
 
-                // Metadata row
+                // Notes indicator
                 if hasMetadata && shouldShowMetadata {
-                    HStack(spacing: 10 * textScale) {
-                        // Due date
-                        if let dueDate = task.dueDate {
-                            HStack(spacing: 4) {
-                                Image(systemName: "calendar")
-                                Text(formatDueDate(dueDate))
-                            }
-                            .font(.system(size: 13 * textScale))
-                            .foregroundColor(dueDateColor(dueDate))
-                        }
-
-                        // Notes indicator
-                        if task.notes != nil && !task.notes!.isEmpty {
-                            Image(systemName: "doc.text")
-                                .font(.system(size: 13 * textScale))
-                                .foregroundColor(AppTheme.metadataText)
-                        }
-                    }
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 13 * textScale))
+                        .foregroundColor(AppTheme.metadataText)
                 }
             }
 
             Spacer()
 
-            // Right side actions
-            if shouldShowActions {
-                HStack(spacing: 10 * textScale) {
-                    // Flag button
-                    Button(action: onToggleFlag) {
-                        Image(systemName: task.isFlagged ? "flag.fill" : "flag")
-                            .font(.system(size: 18 * textScale))
-                            .foregroundColor(task.isFlagged ? Color(hex: "E07A3F") : AppTheme.metadataText)
-                    }
-                    .buttonStyle(.plain)
-                    .opacity(isHovering || task.isFlagged ? 1 : (style == .minimal ? 0 : 1))
-
-                    // Status badge
-                    if task.status != .inbox && task.status != .completed && task.status != .next {
-                        statusBadge
-                    }
-                }
+            // Status badge
+            if task.status != .inbox && task.status != .completed && task.status != .next {
+                statusBadge
             }
         }
         .padding(.vertical, 14 * textScale)
@@ -103,8 +74,7 @@ struct TaskRowView: View {
     // MARK: - Computed Properties
 
     private var hasMetadata: Bool {
-        task.dueDate != nil ||
-        (task.notes != nil && !task.notes!.isEmpty)
+        task.notes != nil && !task.notes!.isEmpty
     }
 
     private var shouldShowMetadata: Bool {
@@ -113,15 +83,6 @@ struct TaskRowView: View {
             return true
         case .minimal:
             return isSelected || isHovering
-        }
-    }
-
-    private var shouldShowActions: Bool {
-        switch style {
-        case .standard:
-            return true
-        case .minimal:
-            return isSelected || isHovering || task.isFlagged
         }
     }
 
@@ -202,42 +163,6 @@ struct TaskRowView: View {
     }
 
     // MARK: - Helpers
-
-    private func formatDueDate(_ date: Date) -> String {
-        let calendar = Calendar.current
-
-        if calendar.isDateInToday(date) {
-            return "Today"
-        } else if calendar.isDateInTomorrow(date) {
-            return "Tomorrow"
-        } else if calendar.isDateInYesterday(date) {
-            return "Yesterday"
-        } else {
-            let formatter = DateFormatter()
-            if calendar.isDate(date, equalTo: Date(), toGranularity: .year) {
-                formatter.dateFormat = "MMM d"
-            } else {
-                formatter.dateFormat = "MMM d, yyyy"
-            }
-            return formatter.string(from: date)
-        }
-    }
-
-    private func dueDateColor(_ date: Date) -> Color {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let dueDay = calendar.startOfDay(for: date)
-
-        if dueDay < today {
-            return Color(hex: "E07A3F") // Overdue
-        } else if calendar.isDateInToday(date) {
-            return AppTheme.sidebarHeaderText // Due today
-        } else if calendar.isDateInTomorrow(date) {
-            return AppTheme.metadataText // Due tomorrow
-        } else {
-            return AppTheme.metadataText
-        }
-    }
 
     private var rowBackground: some View {
         RoundedRectangle(cornerRadius: 8, style: .continuous)

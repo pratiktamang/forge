@@ -46,7 +46,7 @@ struct TaskDetailView: View {
                 // Header: checkbox + title
                 headerSection(task)
 
-                // Property pills (show on hover)
+                // Property pills
                 propertyPillsRow(task)
 
                 // Subtasks
@@ -155,117 +155,64 @@ struct TaskDetailView: View {
                 }
             }
 
-            // Due date pill (only show if set)
-            if task.dueDate != nil {
-                PropertyPill(
-                    icon: "calendar",
-                    value: dateSummary(task.dueDate),
-                    color: dueDateColor(task.dueDate)
-                ) {
+            // Due date pill (always visible)
+            PropertyPill(
+                icon: "calendar",
+                value: task.dueDate != nil ? dateSummary(task.dueDate) : "Due",
+                color: task.dueDate != nil ? dueDateColor(task.dueDate) : Color.gray.opacity(0.5),
+                showBackground: task.dueDate != nil
+            ) {
+                if task.dueDate != nil {
                     Button("Clear") {
                         viewModel.task?.dueDate = nil
                         AsyncTask { await viewModel.save() }
                     }
                     Divider()
-                    Button("Today") {
-                        viewModel.task?.dueDate = today
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Tomorrow") {
-                        viewModel.task?.dueDate = tomorrow
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Next Week") {
-                        viewModel.task?.dueDate = nextWeek
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Divider()
-                    Button("Pick Date...") {
-                        isDuePickerPresented = true
-                    }
                 }
-                .popover(isPresented: $isDuePickerPresented) {
-                    datePickerPopover(title: "Due Date", date: Binding(
-                        get: { viewModel.task?.dueDate ?? today },
-                        set: {
-                            viewModel.task?.dueDate = $0
-                            AsyncTask { await viewModel.save() }
-                        }
-                    ), onClear: {
-                        viewModel.task?.dueDate = nil
-                        AsyncTask { await viewModel.save() }
-                        isDuePickerPresented = false
-                    })
-                }
-            }
-
-            // Flag pill
-            if task.isFlagged {
-                PropertyPill(
-                    icon: "flag.fill",
-                    value: "Flagged",
-                    color: .orange
-                ) {
-                    Button("Remove Flag") {
-                        viewModel.task?.isFlagged = false
-                        AsyncTask { await viewModel.save() }
-                    }
-                }
-            }
-
-            // Add property button
-            addPropertyMenu(task, today: today, tomorrow: tomorrow, nextWeek: nextWeek)
-        }
-        .padding(.leading, 36) // Align with title (after checkbox)
-    }
-
-    @ViewBuilder
-    private func addPropertyMenu(_ task: Task, today: Date, tomorrow: Date, nextWeek: Date) -> some View {
-        Menu {
-            if task.dueDate == nil {
-                Menu("Due Date") {
-                    Button("Today") {
-                        viewModel.task?.dueDate = today
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Tomorrow") {
-                        viewModel.task?.dueDate = tomorrow
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Next Week") {
-                        viewModel.task?.dueDate = nextWeek
-                        AsyncTask { await viewModel.save() }
-                    }
-                }
-            }
-
-            if !task.isFlagged {
-                Button {
-                    viewModel.task?.isFlagged = true
+                Button("Today") {
+                    viewModel.task?.dueDate = today
                     AsyncTask { await viewModel.save() }
-                } label: {
-                    Label("Flag", systemImage: "flag")
                 }
-            } else {
-                Button {
-                    viewModel.task?.isFlagged = false
+                Button("Tomorrow") {
+                    viewModel.task?.dueDate = tomorrow
                     AsyncTask { await viewModel.save() }
-                } label: {
-                    Label("Unflag", systemImage: "flag.slash")
+                }
+                Button("Next Week") {
+                    viewModel.task?.dueDate = nextWeek
+                    AsyncTask { await viewModel.save() }
+                }
+                Divider()
+                Button("Pick Date...") {
+                    isDuePickerPresented = true
                 }
             }
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(AppTheme.textSecondary)
-                .padding(5)
-                .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .fill(AppTheme.textSecondary.opacity(0.08))
-                )
+            .popover(isPresented: $isDuePickerPresented) {
+                datePickerPopover(title: "Due Date", date: Binding(
+                    get: { viewModel.task?.dueDate ?? today },
+                    set: {
+                        viewModel.task?.dueDate = $0
+                        AsyncTask { await viewModel.save() }
+                    }
+                ), onClear: {
+                    viewModel.task?.dueDate = nil
+                    AsyncTask { await viewModel.save() }
+                    isDuePickerPresented = false
+                })
+            }
+
+            // Flag pill (always visible)
+            PropertyPill(
+                icon: task.isFlagged ? "flag.fill" : "flag",
+                value: task.isFlagged ? "Flagged" : "Flag",
+                color: task.isFlagged ? .orange : Color.gray.opacity(0.5),
+                showBackground: task.isFlagged
+            ) {
+                Button(task.isFlagged ? "Remove Flag" : "Add Flag") {
+                    viewModel.task?.isFlagged.toggle()
+                    AsyncTask { await viewModel.save() }
+                }
+            }
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
     }
 
     // MARK: - Property Helpers
@@ -453,6 +400,7 @@ struct PropertyPill<MenuContent: View>: View {
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
+        .fixedSize()
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.12)) {
                 isHovered = hovering
