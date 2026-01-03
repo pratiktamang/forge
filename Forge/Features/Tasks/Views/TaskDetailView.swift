@@ -11,6 +11,7 @@ struct TaskDetailView: View {
     @State private var newTagType: TagType = .tag
     @State private var isDuePickerPresented = false
     @State private var isDeferPickerPresented = false
+    @State private var isDetailsVisible = true
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isNotesFocused: Bool
     @FocusState private var isSubtaskFocused: Bool
@@ -45,31 +46,34 @@ struct TaskDetailView: View {
     @ViewBuilder
     private func taskDetailContent(_ task: Task) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Header
-                headerSection(task)
+            ZStack(alignment: .topTrailing) {
+                HStack(alignment: .top, spacing: 32) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Header
+                        headerSection(task)
 
-                Divider()
+                        subtasksSection
+                            .padding(.top, 4)
+                        Divider().padding(.vertical, 8)
 
-                // Properties
-                propertiesSection(task)
+                        notesSection(task)
 
-                Divider()
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Tags
-                tagsSection
+                    if isDetailsVisible {
+                        detailsSidebar(task)
+                            .frame(width: 280)
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Divider()
-
-                // Notes
-                notesSection(task)
-
-                Divider()
-
-                // Subtasks
-                subtasksSection
-
-                Spacer()
+                if !isDetailsVisible {
+                    sidebarToggleButton
+                        .padding(8)
+                }
             }
             .padding(24)
         }
@@ -80,275 +84,73 @@ struct TaskDetailView: View {
 
     @ViewBuilder
     private func headerSection(_ task: Task) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            // Completion checkbox
-            Button(action: {
-                AsyncTask {
-                    if task.status == .completed {
-                        var updated = task
-                        updated.status = .next
-                        updated.completedAt = nil
-                        viewModel.task = updated
-                        await viewModel.save()
-                    } else {
-                        var updated = task
-                        updated.status = .completed
-                        updated.completedAt = Date()
-                        viewModel.task = updated
-                        await viewModel.save()
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                Button(action: {
+                    AsyncTask {
+                        if task.status == .completed {
+                            var updated = task
+                            updated.status = .next
+                            updated.completedAt = nil
+                            viewModel.task = updated
+                            await viewModel.save()
+                        } else {
+                            var updated = task
+                            updated.status = .completed
+                            updated.completedAt = Date()
+                            viewModel.task = updated
+                            await viewModel.save()
+                        }
                     }
+                }) {
+                    Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
+                        .font(.title2)
+                        .foregroundColor(task.status == .completed ? AppTheme.accent : .secondary)
+                        .padding(8)
                 }
-            }) {
-                Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
-                    .font(.title)
-                    .foregroundColor(task.status == .completed ? .green : .secondary)
-            }
-            .buttonStyle(.plain)
+                .buttonStyle(.plain)
 
-            // Title
-            VStack(alignment: .leading, spacing: 8) {
-                TextField("Task title", text: Binding(
-                    get: { viewModel.task?.title ?? "" },
-                    set: { viewModel.task?.title = $0 }
-                ))
-                .font(.title2.weight(.semibold))
-                .textFieldStyle(.plain)
-                .focused($isTitleFocused)
-                .onSubmit {
-                    AsyncTask { await viewModel.save() }
+                VStack(alignment: .leading, spacing: 6) {
+                    TextField("Task title", text: Binding(
+                        get: { viewModel.task?.title ?? "" },
+                        set: { viewModel.task?.title = $0 }
+                    ))
+                    .font(.title3.weight(.semibold))
+                    .textFieldStyle(.plain)
+                    .focused($isTitleFocused)
+                    .onSubmit {
+                        AsyncTask { await viewModel.save() }
+                    }
+
+                    locationSummaryView(task)
                 }
 
-                // Status and created info
-                HStack(spacing: 12) {
-                    statusMenu(task)
+                Spacer()
 
+                VStack(alignment: .trailing, spacing: 8) {
                     Text("Created \(task.createdAt.formatted(.relative(presentation: .named)))")
                         .font(.caption)
                         .foregroundColor(.secondary)
+
+                    Button(action: {
+                        viewModel.task?.isFlagged.toggle()
+                        AsyncTask { await viewModel.save() }
+                    }) {
+                        Image(systemName: task.isFlagged ? "flag.fill" : "flag")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(task.isFlagged ? AppTheme.accent : .secondary)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
 
-            Spacer()
-
-            // Flag button
-            Button(action: {
-                viewModel.task?.isFlagged.toggle()
-                AsyncTask { await viewModel.save() }
-            }) {
-                Image(systemName: task.isFlagged ? "flag.fill" : "flag")
-                    .font(.title2)
-                    .foregroundColor(task.isFlagged ? .orange : .secondary)
+            HStack(spacing: 12) {
+                statusMenu(task)
+                Spacer()
             }
-            .buttonStyle(.plain)
         }
     }
 
-    // MARK: - Properties Section
-
-    @ViewBuilder
-    private func propertiesSection(_ task: Task) -> some View {
-        let today = Calendar.current.startOfDay(for: Date())
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
-        let nextWeek = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: today) ?? today
-
-        VStack(alignment: .leading, spacing: 0) {
-            // Project
-            propertyRow(icon: "folder", label: "Project") {
-                Menu {
-                    Button("None") {
-                        viewModel.task?.projectId = nil
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Divider()
-                    ForEach(viewModel.projects) { project in
-                        Button(project.title) {
-                            viewModel.task?.projectId = project.id
-                            AsyncTask { await viewModel.save() }
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(projectSummary(task))
-                            .foregroundColor(task.projectId == nil ? .secondary : .primary)
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .menuStyle(.borderlessButton)
-            }
-
-            Divider().padding(.leading, 32)
-
-            // Due Date
-            propertyRow(icon: "calendar", label: "Due Date") {
-                Menu {
-                    Button("None") {
-                        viewModel.task?.dueDate = nil
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Divider()
-                    Button("Today") {
-                        viewModel.task?.dueDate = today
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Tomorrow") {
-                        viewModel.task?.dueDate = tomorrow
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Next Week") {
-                        viewModel.task?.dueDate = nextWeek
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Divider()
-                    Button("Pick Date...") {
-                        isDuePickerPresented = true
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(dateSummary(task.dueDate))
-                            .foregroundColor(task.dueDate == nil ? .secondary : .primary)
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .menuStyle(.borderlessButton)
-                .popover(isPresented: $isDuePickerPresented) {
-                    datePickerPopover(title: "Due Date", date: Binding(
-                        get: { viewModel.task?.dueDate ?? today },
-                        set: {
-                            viewModel.task?.dueDate = $0
-                            AsyncTask { await viewModel.save() }
-                        }
-                    ), onClear: {
-                        viewModel.task?.dueDate = nil
-                        AsyncTask { await viewModel.save() }
-                        isDuePickerPresented = false
-                    })
-                }
-            }
-
-            Divider().padding(.leading, 32)
-
-            // Defer Date
-            propertyRow(icon: "arrow.right.circle", label: "Defer Until") {
-                Menu {
-                    Button("None") {
-                        viewModel.task?.deferDate = nil
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Divider()
-                    Button("Tomorrow") {
-                        viewModel.task?.deferDate = tomorrow
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Button("Next Week") {
-                        viewModel.task?.deferDate = nextWeek
-                        AsyncTask { await viewModel.save() }
-                    }
-                    Divider()
-                    Button("Pick Date...") {
-                        isDeferPickerPresented = true
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(dateSummary(task.deferDate))
-                            .foregroundColor(task.deferDate == nil ? .secondary : .primary)
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .menuStyle(.borderlessButton)
-                .popover(isPresented: $isDeferPickerPresented) {
-                    datePickerPopover(title: "Defer Until", date: Binding(
-                        get: { viewModel.task?.deferDate ?? today },
-                        set: {
-                            viewModel.task?.deferDate = $0
-                            AsyncTask { await viewModel.save() }
-                        }
-                    ), onClear: {
-                        viewModel.task?.deferDate = nil
-                        AsyncTask { await viewModel.save() }
-                        isDeferPickerPresented = false
-                    })
-                }
-            }
-
-            Divider().padding(.leading, 32)
-
-            // Priority
-            propertyRow(icon: "exclamationmark.circle", label: "Priority") {
-                Menu {
-                    ForEach(Priority.allCases, id: \.self) { priority in
-                        Button {
-                            viewModel.task?.priority = priority
-                            AsyncTask { await viewModel.save() }
-                        } label: {
-                            HStack {
-                                Text(priority.displayName)
-                                if task.priority == priority {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(prioritySummary(task))
-                            .foregroundColor(task.priority == .none ? .secondary : Color(hex: task.priority.color))
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .menuStyle(.borderlessButton)
-            }
-
-            Divider().padding(.leading, 32)
-
-            // Estimate
-            propertyRow(icon: "clock", label: "Estimate") {
-                HStack(spacing: 8) {
-                    Stepper(value: Binding(
-                        get: { viewModel.task?.estimatedMinutes ?? 0 },
-                        set: {
-                            viewModel.task?.estimatedMinutes = max(0, $0)
-                            AsyncTask { await viewModel.save() }
-                        }
-                    ), in: 0...1440, step: 5) {
-                        Text(estimateSummary(task))
-                            .foregroundColor((task.estimatedMinutes ?? 0) == 0 ? .secondary : .primary)
-                    }
-                    .controlSize(.small)
-                }
-            }
-        }
-        .padding(.vertical, 8)
-        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-        .cornerRadius(8)
-    }
-
-    @ViewBuilder
-    private func propertyRow<Content: View>(icon: String, label: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-                .frame(width: 20)
-
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            content()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-    }
 
     @ViewBuilder
     private func datePickerPopover(title: String, date: Binding<Date>, onClear: @escaping () -> Void) -> some View {
@@ -400,6 +202,116 @@ struct TaskDetailView: View {
         }
     }
 
+    private func notesSummary(_ task: Task) -> String {
+        guard let notes = task.notes,
+              !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return "Empty"
+        }
+        let wordCount = notes.split { $0.isWhitespace || $0.isNewline }.count
+        return wordCount == 1 ? "1 word" : "\(wordCount) words"
+    }
+
+    @ViewBuilder
+    private func locationSummaryView(_ task: Task) -> some View {
+        let (icon, label) = locationInfo(for: task)
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+            Text(label)
+        }
+        .font(.callout)
+        .foregroundColor(AppTheme.accent)
+    }
+
+    private func locationInfo(for task: Task) -> (String, String) {
+        if let projectId = task.projectId,
+           let project = viewModel.projects.first(where: { $0.id == projectId }) {
+            return ("folder", project.title)
+        }
+        return ("tray", "Inbox")
+    }
+
+    @ViewBuilder
+    private func detailMenuRow(icon: String, label: String, value: String, @ViewBuilder menuContent: () -> some View) -> some View {
+        Menu {
+            menuContent()
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: icon)
+                        .font(.caption)
+                        .foregroundColor(AppTheme.accent)
+                    Text(label.uppercased())
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Text(value.isEmpty ? "—" : value)
+                    .font(.callout.weight(.medium))
+                    .foregroundColor(AppTheme.textPrimary)
+            }
+            .padding(.vertical, 6)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func quickDateButton(_ title: String, date: Date, set: @escaping (Date) -> Void) -> some View {
+        Button(title) {
+            let normalized = Calendar.current.startOfDay(for: date)
+            set(normalized)
+            AsyncTask { await viewModel.save() }
+        }
+    }
+
+    private var sidebarToggleButton: some View {
+        Button(action: toggleDetailsSidebar) {
+            Image(systemName: "sidebar.trailing")
+                .font(.subheadline.weight(.semibold))
+                .padding(6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(nsColor: .controlBackgroundColor).opacity(0.7))
+                )
+        }
+        .buttonStyle(.plain)
+        .help(isDetailsVisible ? "Hide Details" : "Show Details")
+    }
+
+    private func toggleDetailsSidebar() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            isDetailsVisible.toggle()
+        }
+    }
+
+    @ViewBuilder
+    private func detailEstimateRow(_ task: Task) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "clock")
+                    .font(.caption)
+                    .foregroundColor(AppTheme.accent)
+                Text("ESTIMATE")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            Stepper(value: Binding(
+                get: { viewModel.task?.estimatedMinutes ?? 0 },
+                set: {
+                    viewModel.task?.estimatedMinutes = max(0, $0)
+                    AsyncTask { await viewModel.save() }
+                }
+            ), in: 0...1440, step: 5) {
+                Text(estimateSummary(task))
+                    .font(.callout.weight(.medium))
+            }
+            .controlSize(.small)
+        }
+        .padding(.vertical, 6)
+    }
+
     // MARK: - Status Menu
 
     @ViewBuilder
@@ -430,69 +342,6 @@ struct TaskDetailView: View {
             .cornerRadius(4)
         }
         .menuStyle(.borderlessButton)
-    }
-
-    // MARK: - Tags Section
-
-    @ViewBuilder
-    private var tagsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Tags")
-                    .font(.headline)
-
-                Spacer()
-
-                Menu {
-                    if availableTags.isEmpty {
-                        Button("All tags added") {}
-                            .disabled(true)
-                    } else {
-                        ForEach(availableTags) { tag in
-                            Button {
-                                AsyncTask { await viewModel.addTag(tag) }
-                            } label: {
-                                Label(tag.displayName, systemImage: "tag")
-                            }
-                        }
-                    }
-
-                    Divider()
-
-                    Button {
-                        isAddingTag = true
-                    } label: {
-                        Label("Create New Tag", systemImage: "plus.circle")
-                    }
-                } label: {
-                    Label("Add Tag", systemImage: "plus")
-                        .font(.caption.weight(.medium))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                }
-                .menuStyle(.borderedButton)
-                .controlSize(.small)
-                .popover(isPresented: $isAddingTag) {
-                    addTagPopover
-                }
-            }
-
-            // Current tags
-            if viewModel.taskTags.isEmpty {
-                Text("No tags")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
-            } else {
-                TaskDetailFlowLayout(spacing: 8) {
-                    ForEach(viewModel.taskTags) { tag in
-                        TagChip(tag: tag) {
-                            AsyncTask { await viewModel.removeTag(tag) }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private var availableTags: [Tag] {
@@ -543,81 +392,271 @@ struct TaskDetailView: View {
 
     @ViewBuilder
     private func notesSection(_ task: Task) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Notes")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("NOTES")
+                .font(.caption2)
+                .foregroundColor(.secondary)
 
-            TextEditor(text: Binding(
+            let notesBinding = Binding(
                 get: { viewModel.task?.notes ?? "" },
                 set: { viewModel.task?.notes = $0.isEmpty ? nil : $0 }
-            ))
-            .font(.body)
-            .frame(minHeight: 100)
-            .padding(8)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(8)
-            .focused($isNotesFocused)
-            .onChange(of: isNotesFocused) { _, focused in
-                if !focused {
+            )
+
+            ZStack(alignment: .topLeading) {
+                if notesBinding.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text("Write notes…")
+                        .font(.body)
+                        .foregroundColor(.secondary.opacity(0.6))
+                        .padding(.top, 14)
+                        .padding(.leading, 14)
+                }
+
+                TextEditor(text: notesBinding)
+                    .font(.body)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(nsColor: .controlBackgroundColor).opacity(0.45))
+                    )
+                    .focused($isNotesFocused)
+                    .onChange(of: isNotesFocused) { _, focused in
+                        if !focused {
+                            AsyncTask { await viewModel.save() }
+                        }
+                    }
+            }
+            .frame(minHeight: 220)
+        }
+    }
+
+    @ViewBuilder
+    private func detailsSidebar(_ task: Task) -> some View {
+        let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        let nextWeek = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: today) ?? today
+
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Text("DETAILS")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Spacer()
+                sidebarToggleButton
+                    .buttonStyle(.plain)
+            }
+
+            Divider()
+
+            detailMenuRow(icon: "circle.dashed", label: "Status", value: task.status.displayName) {
+                ForEach(TaskStatus.allCases, id: \.self) { status in
+                    Button {
+                        viewModel.task?.status = status
+                        if status == .completed {
+                            viewModel.task?.completedAt = Date()
+                        } else {
+                            viewModel.task?.completedAt = nil
+                        }
+                        AsyncTask { await viewModel.save() }
+                    } label: {
+                        Label(status.displayName, systemImage: status.icon)
+                    }
+                }
+            }
+            Divider()
+
+            detailMenuRow(icon: "bolt.badge.a", label: "Priority", value: prioritySummary(task)) {
+                ForEach(Priority.allCases, id: \.self) { priority in
+                    Button {
+                        viewModel.task?.priority = priority
+                        AsyncTask { await viewModel.save() }
+                    } label: {
+                        HStack {
+                            Text(priority.displayName)
+                            if task.priority == priority {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            }
+            Divider()
+
+            detailMenuRow(icon: "folder", label: "Project", value: projectSummary(task)) {
+                Button("None") {
+                    viewModel.task?.projectId = nil
                     AsyncTask { await viewModel.save() }
+                }
+                Divider()
+                ForEach(viewModel.projects) { project in
+                    Button(project.title) {
+                        viewModel.task?.projectId = project.id
+                        AsyncTask { await viewModel.save() }
+                    }
+                }
+            }
+            Divider()
+
+            detailMenuRow(icon: "calendar", label: "Due Date", value: dateSummary(task.dueDate)) {
+                Button("None") {
+                    viewModel.task?.dueDate = nil
+                    AsyncTask { await viewModel.save() }
+                }
+                Divider()
+                quickDateButton("Today", date: today) { viewModel.task?.dueDate = $0 }
+                quickDateButton("Tomorrow", date: tomorrow) { viewModel.task?.dueDate = $0 }
+                quickDateButton("Next Week", date: nextWeek) { viewModel.task?.dueDate = $0 }
+                Divider()
+                Button("Pick Date...") {
+                    isDuePickerPresented = true
+                }
+            }
+            .popover(isPresented: $isDuePickerPresented) {
+                datePickerPopover(title: "Due Date", date: Binding(
+                    get: { viewModel.task?.dueDate ?? today },
+                    set: {
+                        viewModel.task?.dueDate = $0
+                        AsyncTask { await viewModel.save() }
+                    }), onClear: {
+                        viewModel.task?.dueDate = nil
+                        AsyncTask { await viewModel.save() }
+                        isDuePickerPresented = false
+                    })
+            }
+            Divider()
+
+            detailMenuRow(icon: "arrow.uturn.right.circle", label: "Defer Until", value: dateSummary(task.deferDate)) {
+                Button("None") {
+                    viewModel.task?.deferDate = nil
+                    AsyncTask { await viewModel.save() }
+                }
+                Divider()
+                quickDateButton("Tomorrow", date: tomorrow) { viewModel.task?.deferDate = $0 }
+                quickDateButton("Next Week", date: nextWeek) { viewModel.task?.deferDate = $0 }
+                Divider()
+                Button("Pick Date...") {
+                    isDeferPickerPresented = true
+                }
+            }
+            .popover(isPresented: $isDeferPickerPresented) {
+                datePickerPopover(title: "Defer Until", date: Binding(
+                    get: { viewModel.task?.deferDate ?? today },
+                    set: {
+                        viewModel.task?.deferDate = $0
+                        AsyncTask { await viewModel.save() }
+                    }), onClear: {
+                        viewModel.task?.deferDate = nil
+                        AsyncTask { await viewModel.save() }
+                        isDeferPickerPresented = false
+                    })
+            }
+            Divider()
+
+            detailEstimateRow(task)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("LABELS")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Menu {
+                        if availableTags.isEmpty {
+                            Button("All labels added") {}
+                                .disabled(true)
+                        } else {
+                            ForEach(availableTags) { tag in
+                                Button {
+                                    AsyncTask { await viewModel.addTag(tag) }
+                                } label: {
+                                    Label(tag.displayName, systemImage: "tag")
+                                }
+                            }
+                        }
+
+                        Divider()
+
+                        Button {
+                            isAddingTag = true
+                        } label: {
+                            Label("Create Label", systemImage: "plus")
+                        }
+                    } label: {
+                        Image(systemName: "plus.circle")
+                            .font(.headline)
+                            .foregroundColor(AppTheme.textPrimary)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .popover(isPresented: $isAddingTag) {
+                        addTagPopover
+                    }
+                }
+
+                if viewModel.taskTags.isEmpty {
+                    Text("No labels")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    TaskDetailFlowLayout(spacing: 8) {
+                        ForEach(viewModel.taskTags) { tag in
+                            TagChip(tag: tag) {
+                                AsyncTask { await viewModel.removeTag(tag) }
+                            }
+                        }
+                    }
                 }
             }
         }
+        .padding(.vertical, 4)
     }
 
     // MARK: - Subtasks Section
 
     @ViewBuilder
     private var subtasksSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Subtasks")
-                    .font(.headline)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("SUBTASKS")
+                .font(.caption2)
+                .foregroundColor(.secondary)
 
-                Spacer()
-
-                if !viewModel.subtasks.isEmpty {
-                    Text("\(viewModel.subtasks.filter { $0.status == .completed }.count)/\(viewModel.subtasks.count)")
+            VStack(spacing: 6) {
+                if viewModel.subtasks.isEmpty {
+                    Text("No subtasks yet")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                }
-            }
-
-            // Subtask list
-            VStack(spacing: 4) {
-                ForEach(viewModel.subtasks) { subtask in
-                    SubtaskRow(
-                        subtask: subtask,
-                        onToggle: {
-                            AsyncTask { await viewModel.toggleSubtask(subtask) }
-                        },
-                        onDelete: {
-                            AsyncTask { await viewModel.deleteSubtask(subtask) }
-                        }
-                    )
-                }
-
-                // Add subtask
-                HStack(spacing: 12) {
-                    Image(systemName: "plus.circle")
-                        .foregroundColor(.accentColor)
-
-                    TextField("Add subtask...", text: $newSubtaskTitle)
-                        .textFieldStyle(.plain)
-                        .focused($isSubtaskFocused)
-                        .onSubmit {
-                            guard !newSubtaskTitle.isEmpty else { return }
-                            AsyncTask {
-                                await viewModel.addSubtask(title: newSubtaskTitle)
-                                newSubtaskTitle = ""
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    ForEach(viewModel.subtasks) { subtask in
+                        SubtaskRow(
+                            subtask: subtask,
+                            onToggle: {
+                                AsyncTask { await viewModel.toggleSubtask(subtask) }
+                            },
+                            onDelete: {
+                                AsyncTask { await viewModel.deleteSubtask(subtask) }
                             }
-                        }
+                        )
+                    }
                 }
-                .padding(.vertical, 8)
             }
-            .padding(12)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(8)
+
+            HStack(spacing: 10) {
+                Image(systemName: "plus.circle")
+                    .foregroundColor(AppTheme.accent)
+
+                TextField("Add subtask...", text: $newSubtaskTitle)
+                    .textFieldStyle(.plain)
+                    .focused($isSubtaskFocused)
+                    .onSubmit {
+                        guard !newSubtaskTitle.isEmpty else { return }
+                        AsyncTask {
+                            await viewModel.addSubtask(title: newSubtaskTitle)
+                            newSubtaskTitle = ""
+                        }
+                    }
+            }
+            .padding(.vertical, 6)
         }
     }
 }

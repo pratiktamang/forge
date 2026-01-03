@@ -3,8 +3,15 @@ import SwiftUI
 struct TaskRowView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.textScale) private var textScale
+
+    enum Style {
+        case standard
+        case minimal
+    }
+
     let task: Task
     var isSelected: Bool = false
+    var style: Style = .standard
     let onToggleComplete: () -> Void
     let onToggleFlag: () -> Void
     var onSetPriority: ((Priority) -> Void)? = nil
@@ -37,7 +44,7 @@ struct TaskRowView: View {
                     .lineLimit(2)
 
                 // Metadata row
-                if hasMetadata {
+                if hasMetadata && shouldShowMetadata {
                     HStack(spacing: 10 * textScale) {
                         // Due date
                         if let dueDate = task.dueDate {
@@ -77,19 +84,21 @@ struct TaskRowView: View {
             Spacer()
 
             // Right side actions
-            HStack(spacing: 10 * textScale) {
-                // Flag button
-                Button(action: onToggleFlag) {
-                    Image(systemName: task.isFlagged ? "flag.fill" : "flag")
-                        .font(.system(size: 18 * textScale))
-                        .foregroundColor(task.isFlagged ? Color(hex: "E07A3F") : AppTheme.metadataText)
-                }
-                .buttonStyle(.plain)
-                .opacity(isHovering || task.isFlagged ? 1 : 0)
+            if shouldShowActions {
+                HStack(spacing: 10 * textScale) {
+                    // Flag button
+                    Button(action: onToggleFlag) {
+                        Image(systemName: task.isFlagged ? "flag.fill" : "flag")
+                            .font(.system(size: 18 * textScale))
+                            .foregroundColor(task.isFlagged ? Color(hex: "E07A3F") : AppTheme.metadataText)
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(isHovering || task.isFlagged ? 1 : (style == .minimal ? 0 : 1))
 
-                // Status badge
-                if task.status != .inbox && task.status != .completed && task.status != .next {
-                    statusBadge
+                    // Status badge
+                    if task.status != .inbox && task.status != .completed && task.status != .next {
+                        statusBadge
+                    }
                 }
             }
         }
@@ -114,6 +123,24 @@ struct TaskRowView: View {
         task.deferDate != nil ||
         task.priority != .none ||
         (task.notes != nil && !task.notes!.isEmpty)
+    }
+
+    private var shouldShowMetadata: Bool {
+        switch style {
+        case .standard:
+            return true
+        case .minimal:
+            return isSelected || isHovering
+        }
+    }
+
+    private var shouldShowActions: Bool {
+        switch style {
+        case .standard:
+            return true
+        case .minimal:
+            return isSelected || isHovering || task.isFlagged
+        }
     }
 
     // MARK: - Subviews

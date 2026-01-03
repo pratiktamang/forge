@@ -55,6 +55,7 @@ struct TaskListView: View {
                         TaskRowView(
                             task: task,
                             isSelected: appState.selectedTaskId == task.id,
+                            style: rowStyle,
                             onToggleComplete: {
                                 AsyncTask { await viewModel.toggleComplete(task) }
                             },
@@ -307,4 +308,12 @@ struct TaskListView: View {
 #Preview {
     TaskListView(filter: .inbox)
         .environmentObject(AppState())
+}
+
+// MARK: - Private Helpers
+
+private extension TaskListView {
+    var rowStyle: TaskRowView.Style {
+        viewModel.filter == .inbox ? .minimal : .standard
+    }
 }
