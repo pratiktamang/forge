@@ -49,7 +49,7 @@ struct TaskListView: View {
     private var taskList: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 4, pinnedViews: []) {
+                LazyVStack(spacing: 0, pinnedViews: []) {
                     ForEach(Array(viewModel.tasks.enumerated()), id: \.element.id) { index, task in
                         TaskRowView(
                             task: task,
@@ -74,8 +74,8 @@ struct TaskListView: View {
                             canMoveUp: index > 0,
                             canMoveDown: index < viewModel.tasks.count - 1
                         )
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
                         .id(task.id)
                         .onTapGesture {
                             withAnimation(.easeInOut(duration: 0.16)) {

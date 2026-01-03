@@ -17,34 +17,34 @@ struct TaskRowView: View {
     @State private var isHovering = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 14) {
             // Checkbox
             Button(action: onToggleComplete) {
                 Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
+                    .font(.title)
                     .foregroundColor(task.status == .completed ? AppTheme.accent : AppTheme.metadataText)
             }
             .buttonStyle(.plain)
 
             // Content
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 // Title
                 Text(task.title)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
                     .strikethrough(task.status == .completed)
                     .foregroundColor(task.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
                     .lineLimit(2)
 
                 // Metadata row
                 if hasMetadata {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 10) {
                         // Due date
                         if let dueDate = task.dueDate {
                             HStack(spacing: 4) {
                                 Image(systemName: "calendar")
                                 Text(formatDueDate(dueDate))
                             }
-                            .font(.caption)
+                            .font(.subheadline)
                             .foregroundColor(dueDateColor(dueDate))
                         }
 
@@ -54,7 +54,7 @@ struct TaskRowView: View {
                                 Image(systemName: "arrow.right.circle")
                                 Text("Starts \(formatDueDate(deferDate))")
                             }
-                            .font(.caption)
+                            .font(.subheadline)
                             .foregroundColor(.orange)
                         }
 
@@ -66,7 +66,7 @@ struct TaskRowView: View {
                         // Notes indicator
                         if task.notes != nil && !task.notes!.isEmpty {
                             Image(systemName: "doc.text")
-                                .font(.caption)
+                                .font(.subheadline)
                                 .foregroundColor(AppTheme.metadataText)
                         }
                     }
@@ -76,10 +76,11 @@ struct TaskRowView: View {
             Spacer()
 
             // Right side actions
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 // Flag button
                 Button(action: onToggleFlag) {
                     Image(systemName: task.isFlagged ? "flag.fill" : "flag")
+                        .font(.title3)
                         .foregroundColor(task.isFlagged ? Color(hex: "E07A3F") : AppTheme.metadataText)
                 }
                 .buttonStyle(.plain)
@@ -91,10 +92,10 @@ struct TaskRowView: View {
                 }
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 16)
         .background(rowBackground)
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
                 isHovering = hovering
@@ -117,11 +118,11 @@ struct TaskRowView: View {
     // MARK: - Subviews
 
     private var priorityBadge: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 3) {
             Image(systemName: "exclamationmark.circle.fill")
             Text(task.priority.displayName)
         }
-        .font(.caption)
+        .font(.subheadline)
         .foregroundColor(priorityColor)
     }
 
@@ -136,9 +137,9 @@ struct TaskRowView: View {
 
     private var statusBadge: some View {
         Text(task.status.displayName)
-            .font(.caption2)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
             .background(AppTheme.sidebarHeaderBackground.opacity(0.7))
             .foregroundColor(AppTheme.sidebarHeaderText)
             .cornerRadius(4)
@@ -260,32 +261,17 @@ struct TaskRowView: View {
     }
 
     private var rowBackground: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
             .fill(backgroundColor)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(borderColor, lineWidth: isSelected ? 1.5 : 1)
-            )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.45 : 0.08), radius: 12, y: 6)
     }
 
     private var backgroundColor: Color {
         if isSelected {
             return AppTheme.selectionBackground
         } else if isHovering {
-            return AppTheme.cardBackground.opacity(0.95)
+            return AppTheme.contentBackground.opacity(0.8)
         } else {
-            return AppTheme.cardBackground
-        }
-    }
-
-    private var borderColor: Color {
-        if isSelected {
-            return AppTheme.selectionBorder
-        } else if isHovering {
-            return AppTheme.selectionBorder.opacity(0.6)
-        } else {
-            return AppTheme.cardBorder
+            return Color.clear
         }
     }
 }
