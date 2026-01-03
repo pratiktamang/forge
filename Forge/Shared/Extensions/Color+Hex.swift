@@ -41,7 +41,7 @@ extension Color {
         let dynamicColor = NSColor(name: nil) { appearance in
             let match = appearance.bestMatch(from: [.darkAqua, .aqua])
             return match == .darkAqua ? NSColor(hex: darkHex) : NSColor(hex: lightHex)
-        } ?? NSColor(hex: lightHex)
+        }
 
         return Color(dynamicColor)
     }
