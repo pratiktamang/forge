@@ -5,7 +5,6 @@ private typealias AsyncTask = _Concurrency.Task
 
 struct MainNavigationView: View {
     @EnvironmentObject var appState: AppState
-    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
 
     private var hasDetailSelection: Bool {
         appState.selectedTaskId != nil ||
@@ -16,7 +15,7 @@ struct MainNavigationView: View {
     }
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        NavigationSplitView {
             SidebarView()
         } content: {
             ContentListView()
@@ -34,16 +33,6 @@ struct MainNavigationView: View {
         }
         .sheet(isPresented: $appState.showQuickCapture) {
             QuickCaptureView()
-        }
-        .onChange(of: hasDetailSelection) { _, hasSelection in
-            withAnimation {
-                columnVisibility = (hasSelection && !appState.isInBoardMode) ? .all : .doubleColumn
-            }
-        }
-        .onChange(of: appState.isInBoardMode) { _, isBoard in
-            withAnimation {
-                columnVisibility = isBoard ? .doubleColumn : (hasDetailSelection ? .all : .doubleColumn)
-            }
         }
     }
 }
