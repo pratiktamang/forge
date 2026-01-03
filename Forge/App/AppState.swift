@@ -1,6 +1,36 @@
 import SwiftUI
 import Combine
 
+// MARK: - Text Scale Environment Key
+
+private struct TextScaleKey: EnvironmentKey {
+    static let defaultValue: Double = 1.0
+}
+
+extension EnvironmentValues {
+    var textScale: Double {
+        get { self[TextScaleKey.self] }
+        set { self[TextScaleKey.self] = newValue }
+    }
+}
+
+extension View {
+    func scaledFont(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> some View {
+        self.modifier(ScaledFontModifier(size: size, weight: weight, design: design))
+    }
+}
+
+private struct ScaledFontModifier: ViewModifier {
+    @Environment(\.textScale) private var textScale
+    let size: CGFloat
+    let weight: Font.Weight
+    let design: Font.Design
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: size * textScale, weight: weight, design: design))
+    }
+}
+
 @MainActor
 final class AppState: ObservableObject {
     // MARK: - Navigation
@@ -20,6 +50,21 @@ final class AppState: ObservableObject {
     @Published var searchQuery = ""
     @Published var isVimModeEnabled = true
     @Published var isInBoardMode = false
+    @AppStorage("textScale") var textScale: Double = 1.0
+
+    // MARK: - Zoom
+
+    func zoomIn() {
+        textScale = min(textScale + 0.1, 1.5)
+    }
+
+    func zoomOut() {
+        textScale = max(textScale - 0.1, 0.7)
+    }
+
+    func resetZoom() {
+        textScale = 1.0
+    }
 
     // MARK: - Data
 
@@ -44,6 +89,27 @@ final class AppState: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.showQuickCapture = true
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .zoomIn)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.zoomIn()
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .zoomOut)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.zoomOut()
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .resetZoom)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.resetZoom()
             }
             .store(in: &cancellables)
     }

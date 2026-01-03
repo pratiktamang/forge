@@ -8,6 +8,7 @@ struct TaskListView: View {
     @EnvironmentObject var appState: AppState
     @State private var newTaskTitle = ""
     @FocusState private var isNewTaskFocused: Bool
+    @FocusState private var isListFocused: Bool
 
     init(filter: TaskViewModel.Filter) {
         _viewModel = StateObject(wrappedValue: TaskViewModel(filter: filter))
@@ -91,7 +92,55 @@ struct TaskListView: View {
             .onChange(of: appState.selectedTaskId) { _, newValue in
                 if let newValue {
                     proxy.scrollTo(newValue, anchor: .center)
+                    isListFocused = true
                 }
+            }
+            .focusable()
+            .focused($isListFocused)
+            .focusEffectDisabled()
+            .onKeyPress(.upArrow) {
+                selectPreviousTask()
+                return .handled
+            }
+            .onKeyPress(.downArrow) {
+                selectNextTask()
+                return .handled
+            }
+        }
+    }
+
+    // MARK: - Keyboard Navigation
+
+    private func selectPreviousTask() {
+        guard !viewModel.tasks.isEmpty else { return }
+
+        if let currentId = appState.selectedTaskId,
+           let currentIndex = viewModel.tasks.firstIndex(where: { $0.id == currentId }),
+           currentIndex > 0 {
+            withAnimation(.easeInOut(duration: 0.16)) {
+                appState.selectedTaskId = viewModel.tasks[currentIndex - 1].id
+            }
+        } else if appState.selectedTaskId == nil {
+            // Select first task if none selected
+            withAnimation(.easeInOut(duration: 0.16)) {
+                appState.selectedTaskId = viewModel.tasks.first?.id
+            }
+        }
+    }
+
+    private func selectNextTask() {
+        guard !viewModel.tasks.isEmpty else { return }
+
+        if let currentId = appState.selectedTaskId,
+           let currentIndex = viewModel.tasks.firstIndex(where: { $0.id == currentId }),
+           currentIndex < viewModel.tasks.count - 1 {
+            withAnimation(.easeInOut(duration: 0.16)) {
+                appState.selectedTaskId = viewModel.tasks[currentIndex + 1].id
+            }
+        } else if appState.selectedTaskId == nil {
+            // Select first task if none selected
+            withAnimation(.easeInOut(duration: 0.16)) {
+                appState.selectedTaskId = viewModel.tasks.first?.id
             }
         }
     }

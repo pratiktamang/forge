@@ -64,6 +64,25 @@ struct ForgeCommands: Commands {
             }
             .keyboardShortcut("k", modifiers: .command)
         }
+
+        CommandGroup(after: .toolbar) {
+            Divider()
+
+            Button("Zoom In") {
+                NotificationCenter.default.post(name: .zoomIn, object: nil)
+            }
+            .keyboardShortcut("+", modifiers: .command)
+
+            Button("Zoom Out") {
+                NotificationCenter.default.post(name: .zoomOut, object: nil)
+            }
+            .keyboardShortcut("-", modifiers: .command)
+
+            Button("Reset Zoom") {
+                NotificationCenter.default.post(name: .resetZoom, object: nil)
+            }
+            .keyboardShortcut("0", modifiers: .command)
+        }
     }
 }
 
@@ -72,4 +91,7 @@ extension Notification.Name {
     static let newNote = Notification.Name("newNote")
     static let quickCapture = Notification.Name("quickCapture")
     static let showCommandPalette = Notification.Name("showCommandPalette")
+    static let zoomIn = Notification.Name("zoomIn")
+    static let zoomOut = Notification.Name("zoomOut")
+    static let resetZoom = Notification.Name("resetZoom")
 }

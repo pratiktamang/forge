@@ -6,6 +6,18 @@ private typealias AsyncTask = _Concurrency.Task
 struct MainNavigationView: View {
     @EnvironmentObject var appState: AppState
 
+    private var dynamicTypeSize: DynamicTypeSize {
+        switch appState.textScale {
+        case ..<0.8: return .xSmall
+        case 0.8..<0.9: return .small
+        case 0.9..<1.0: return .medium
+        case 1.0..<1.1: return .large
+        case 1.1..<1.2: return .xLarge
+        case 1.2..<1.3: return .xxLarge
+        default: return .xxxLarge
+        }
+    }
+
     private var hasDetailSelection: Bool {
         appState.selectedTaskId != nil ||
         appState.selectedNoteId != nil ||
@@ -28,6 +40,8 @@ struct MainNavigationView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .background(AppTheme.windowBackground)
+        .environment(\.textScale, appState.textScale)
+        .environment(\.dynamicTypeSize, dynamicTypeSize)
         .sheet(isPresented: $appState.showCommandPalette) {
             CommandPaletteView()
         }
@@ -294,6 +308,7 @@ struct DetailView: View {
         Group {
             if let taskId = appState.selectedTaskId {
                 TaskDetailView(taskId: taskId)
+                    .id(taskId)
             } else if let noteId = appState.selectedNoteId {
                 NoteEditorView(noteId: noteId)
             } else if let goalId = appState.selectedGoalId {

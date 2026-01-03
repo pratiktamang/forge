@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TaskRowView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.textScale) private var textScale
     let task: Task
     var isSelected: Bool = false
     let onToggleComplete: () -> Void
@@ -17,34 +18,34 @@ struct TaskRowView: View {
     @State private var isHovering = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: .top, spacing: 14 * textScale) {
             // Checkbox
             Button(action: onToggleComplete) {
                 Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
-                    .font(.title)
+                    .font(.system(size: 24 * textScale))
                     .foregroundColor(task.status == .completed ? AppTheme.accent : AppTheme.metadataText)
             }
             .buttonStyle(.plain)
 
             // Content
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 6 * textScale) {
                 // Title
                 Text(task.title)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .font(.system(size: 16 * textScale, weight: .medium, design: .rounded))
                     .strikethrough(task.status == .completed)
                     .foregroundColor(task.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
                     .lineLimit(2)
 
                 // Metadata row
                 if hasMetadata {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 10 * textScale) {
                         // Due date
                         if let dueDate = task.dueDate {
                             HStack(spacing: 4) {
                                 Image(systemName: "calendar")
                                 Text(formatDueDate(dueDate))
                             }
-                            .font(.subheadline)
+                            .font(.system(size: 13 * textScale))
                             .foregroundColor(dueDateColor(dueDate))
                         }
 
@@ -54,7 +55,7 @@ struct TaskRowView: View {
                                 Image(systemName: "arrow.right.circle")
                                 Text("Starts \(formatDueDate(deferDate))")
                             }
-                            .font(.subheadline)
+                            .font(.system(size: 13 * textScale))
                             .foregroundColor(.orange)
                         }
 
@@ -66,7 +67,7 @@ struct TaskRowView: View {
                         // Notes indicator
                         if task.notes != nil && !task.notes!.isEmpty {
                             Image(systemName: "doc.text")
-                                .font(.subheadline)
+                                .font(.system(size: 13 * textScale))
                                 .foregroundColor(AppTheme.metadataText)
                         }
                     }
@@ -76,11 +77,11 @@ struct TaskRowView: View {
             Spacer()
 
             // Right side actions
-            HStack(spacing: 10) {
+            HStack(spacing: 10 * textScale) {
                 // Flag button
                 Button(action: onToggleFlag) {
                     Image(systemName: task.isFlagged ? "flag.fill" : "flag")
-                        .font(.title3)
+                        .font(.system(size: 18 * textScale))
                         .foregroundColor(task.isFlagged ? Color(hex: "E07A3F") : AppTheme.metadataText)
                 }
                 .buttonStyle(.plain)
@@ -92,8 +93,8 @@ struct TaskRowView: View {
                 }
             }
         }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 16)
+        .padding(.vertical, 14 * textScale)
+        .padding(.horizontal, 16 * textScale)
         .background(rowBackground)
         .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .onHover { hovering in
@@ -122,7 +123,7 @@ struct TaskRowView: View {
             Image(systemName: "exclamationmark.circle.fill")
             Text(task.priority.displayName)
         }
-        .font(.subheadline)
+        .font(.system(size: 13 * textScale))
         .foregroundColor(priorityColor)
     }
 
@@ -137,9 +138,9 @@ struct TaskRowView: View {
 
     private var statusBadge: some View {
         Text(task.status.displayName)
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
+            .font(.system(size: 11 * textScale))
+            .padding(.horizontal, 8 * textScale)
+            .padding(.vertical, 3 * textScale)
             .background(AppTheme.sidebarHeaderBackground.opacity(0.7))
             .foregroundColor(AppTheme.sidebarHeaderText)
             .cornerRadius(4)
