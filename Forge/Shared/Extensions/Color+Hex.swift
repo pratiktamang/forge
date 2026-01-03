@@ -76,8 +76,8 @@ extension NSColor {
 
 /// Shared palette for a minimal, glass-inspired interface.
 enum AppTheme {
-    static let accent = color(light: "2F9C95", dark: "5ED5CD")
-    static let accentShadow = color(light: "1E6D68", dark: "44AFAA")
+    static let accent = color(light: "3B82F6", dark: "60A5FA")
+    static let accentShadow = color(light: "2563EB", dark: "3B82F6")
 
     static let windowBackground = color(light: "F2F0EB", dark: "0F1115")
     static let sidebarBackground = color(light: "F5F3EE", dark: "17191D")
@@ -89,12 +89,12 @@ enum AppTheme {
     static let contentBackground = color(light: "F7F4ED", dark: "121418")
     static let cardBackground = color(light: "FDFBF6", dark: "1B1E23")
     static let cardBorder = color(light: "E0D7C8", dark: "262A31")
-    static let selectionBackground = color(light: "E8F6F4", dark: "1F2A2A")
-    static let selectionBorder = color(light: "B8E5E0", dark: "365656")
+    static let selectionBackground = color(light: "EFF6FF", dark: "1E2433")
+    static let selectionBorder = color(light: "93C5FD", dark: "3B5998")
 
     static let metadataText = color(light: "808592", dark: "9BA2B2")
     static let pillPurple = color(light: "4C5C68", dark: "7A8896")
-    static let dateStampBackground = color(light: "E2F4F1", dark: "233443")
+    static let dateStampBackground = color(light: "DBEAFE", dark: "1E3A5F")
 
     static let quickAddBackground = color(light: "F1EDE4", dark: "1B1E22")
     static let quickAddBorder = color(light: "DDD4C6", dark: "262A31")
@@ -103,7 +103,7 @@ enum AppTheme {
 
     static let textPrimary = color(light: "1D1F24", dark: "F5F6FB")
     static let textSecondary = color(light: "676B75", dark: "B6BBC7")
-    static let propertyHighlight = color(light: "4C7DFF", dark: "2F9C95")
+    static let propertyHighlight = color(light: "3B82F6", dark: "60A5FA")
 
     private static func color(light: String, dark: String) -> Color {
         Color.adaptive(lightHex: light, darkHex: dark)
