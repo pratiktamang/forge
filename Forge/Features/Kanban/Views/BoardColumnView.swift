@@ -68,7 +68,7 @@ struct BoardColumnView: View {
             // Color indicator
             if let colorHex = column.color {
                 Circle()
-                    .fill(Color(hex: colorHex) ?? .gray)
+                    .fill(Color(hex: colorHex))
                     .frame(width: 8, height: 8)
             }
 

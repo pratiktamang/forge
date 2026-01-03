@@ -236,6 +236,18 @@ final class GoalDetailViewModel: ObservableObject {
         }
     }
 
+    func delete() async -> Bool {
+        guard let goal = goal else { return false }
+
+        do {
+            try await goalRepository.delete(goal)
+            return true
+        } catch {
+            self.error = error
+            return false
+        }
+    }
+
     func addInitiative(title: String, description: String?) async {
         let initiative = Initiative(
             title: title,
@@ -344,6 +356,18 @@ final class InitiativeViewModel: ObservableObject {
             try await initiativeRepository.save(initiative)
         } catch {
             self.error = error
+        }
+    }
+
+    func delete() async -> Bool {
+        guard let initiative = initiative else { return false }
+
+        do {
+            try await initiativeRepository.delete(initiative)
+            return true
+        } catch {
+            self.error = error
+            return false
         }
     }
 

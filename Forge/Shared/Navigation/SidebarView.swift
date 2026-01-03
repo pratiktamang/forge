@@ -10,6 +10,8 @@ struct SidebarView: View {
     @State private var editingPerspective: Perspective?
     @State private var isAddingProject = false
     @State private var newProjectTitle = ""
+    @State private var editingProject: Project? = nil
+    private let rowFont = Font.system(size: 13, weight: .medium, design: .rounded)
 
     var body: some View {
         List(selection: $appState.selectedSection) {
@@ -21,7 +23,11 @@ struct SidebarView: View {
             trackingSection
         }
         .listStyle(.sidebar)
-        .frame(minWidth: 200)
+        .listSectionSeparator(.hidden)
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.sidebarBackground)
+        .listRowBackground(AppTheme.sidebarRowBackground)
+        .frame(minWidth: 230)
         .sheet(isPresented: $isAddingPerspective) {
             PerspectiveEditorSheet()
         }
@@ -40,6 +46,9 @@ struct SidebarView: View {
                 }
             }
         }
+        .sheet(item: $editingProject) { project in
+            ProjectEditorSheet(project: project)
+        }
         .onAppear {
             perspectiveViewModel.startObserving()
             projectViewModel.startObserving()
@@ -53,18 +62,20 @@ struct SidebarView: View {
     // MARK: - Sections
 
     private var perspectivesSection: some View {
-        Section("Perspectives") {
+        Section {
             sidebarRow(.inbox)
             sidebarRow(.today)
             sidebarRow(.upcoming)
             sidebarRow(.calendar)
             sidebarRow(.flagged)
+        } header: {
+            SidebarSectionHeader(title: "Perspectives")
         }
     }
 
     @ViewBuilder
     private var customViewsSection: some View {
-        Section("Custom Views") {
+        Section {
             ForEach(perspectiveViewModel.perspectives) { perspective in
                 perspectiveRow(perspective)
             }
@@ -73,48 +84,117 @@ struct SidebarView: View {
             }
 
             addCustomViewButton
+        } header: {
+            SidebarSectionHeader(title: "Custom Views")
         }
     }
 
     @ViewBuilder
     private var projectsSection: some View {
-        Section("Projects") {
-            ForEach(projectViewModel.projects) { project in
-                Label(project.title, systemImage: project.icon ?? "folder")
-                    .tag(SidebarSection.project(project.id))
-                    .contextMenu {
-                        Button("Delete", role: .destructive) {
-                            AsyncTask { await projectViewModel.deleteProject(project) }
-                        }
-                    }
+        Section {
+            if projectViewModel.projectsWithCounts.isEmpty {
+                Text("Organize work into projects")
+                    .font(.caption)
+                    .foregroundColor(AppTheme.textSecondary)
+                    .padding(.vertical, 4)
+            }
+
+            ForEach(projectViewModel.projectsWithCounts, id: \.project.id) { item in
+                projectRow(item)
             }
 
             Button(action: { isAddingProject = true }) {
                 Label("Add Project", systemImage: "plus")
-                    .foregroundColor(.secondary)
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(AppTheme.accentShadow)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(AppTheme.sidebarHeaderBackground.opacity(0.8))
+                    )
             }
             .buttonStyle(.plain)
+        } header: {
+            SidebarSectionHeader(title: "Projects")
+        }
+    }
+
+    @ViewBuilder
+    private func projectRow(_ item: ProjectRepository.ProjectWithTaskCount) -> some View {
+        let project = item.project
+        let iconColor: Color = project.color.flatMap { Color(hex: $0) } ?? .accentColor
+
+        HStack {
+            Image(systemName: project.icon ?? "folder")
+                .foregroundColor(iconColor)
+            Text(project.title)
+                .font(rowFont)
+                .foregroundColor(AppTheme.textPrimary)
+            Spacer()
+            if item.taskCount > 0 {
+                Text("\(item.taskCount)")
+                    .font(.caption)
+                    .foregroundColor(AppTheme.textSecondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(AppTheme.sidebarHeaderBackground.opacity(0.6))
+                    .cornerRadius(4)
+            }
+        }
+        .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+        .tag(SidebarSection.project(project.id))
+        .contextMenu {
+            Button("Edit") {
+                editingProject = project
+            }
+
+            Divider()
+
+            Button("Duplicate") {
+                AsyncTask { await projectViewModel.duplicateProject(project) }
+            }
+
+            Button("Archive") {
+                AsyncTask {
+                    var archived = project
+                    archived.status = .archived
+                    await projectViewModel.updateProject(archived)
+                }
+            }
+
+            Divider()
+
+            Button("Delete", role: .destructive) {
+                AsyncTask { await projectViewModel.deleteProject(project) }
+            }
         }
     }
 
     private var planningSection: some View {
-        Section("Planning") {
+        Section {
             sidebarRow(.goals)
             sidebarRow(.weeklyReview)
+        } header: {
+            SidebarSectionHeader(title: "Planning")
         }
     }
 
     private var notesSection: some View {
-        Section("Notes") {
+        Section {
             sidebarRow(.notes)
             sidebarRow(.dailyNote)
+        } header: {
+            SidebarSectionHeader(title: "Notes")
         }
     }
 
     private var trackingSection: some View {
-        Section("Tracking") {
+        Section {
             sidebarRow(.habits)
             sidebarRow(.activity)
+        } header: {
+            SidebarSectionHeader(title: "Tracking")
         }
     }
 
@@ -122,6 +202,9 @@ struct SidebarView: View {
 
     private func sidebarRow(_ section: SidebarSection) -> some View {
         Label(section.title, systemImage: section.icon)
+            .font(rowFont)
+            .foregroundColor(AppTheme.textPrimary)
+            .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
             .tag(section)
     }
 
@@ -135,6 +218,9 @@ struct SidebarView: View {
                 .foregroundColor(colorValue)
         }
         .tag(SidebarSection.perspective(perspective.id))
+        .font(rowFont)
+        .foregroundColor(AppTheme.textPrimary)
+        .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
         .contextMenu {
             Button("Edit") {
                 editingPerspective = perspective
@@ -145,10 +231,37 @@ struct SidebarView: View {
         }
     }
 
+    private struct SidebarSectionHeader: View {
+        let title: String
+
+        var body: some View {
+            Text(title.uppercased())
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .kerning(0.8)
+                .foregroundColor(AppTheme.sidebarHeaderText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(AppTheme.sidebarHeaderBackground)
+                )
+                .padding(.horizontal, 4)
+                .padding(.top, 8)
+        }
+    }
+
     private var addCustomViewButton: some View {
         Button(action: { isAddingPerspective = true }) {
             Label("Add Custom View", systemImage: "plus")
-                .foregroundColor(.secondary)
+                .font(.caption.weight(.semibold))
+                .foregroundColor(AppTheme.accentShadow)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(AppTheme.sidebarHeaderBackground.opacity(0.8))
+                )
         }
         .buttonStyle(.plain)
     }

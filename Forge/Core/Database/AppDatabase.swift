@@ -270,4 +270,127 @@ final class AppDatabase {
 
         try migrator.migrate(dbQueue)
     }
+
+    // MARK: - Seed Data
+
+    #if DEBUG
+    func resetAndSeed() throws {
+        print("🗑️ Clearing all data...")
+        try dbQueue.write { db in
+            try db.execute(sql: "DELETE FROM taskTags")
+            try db.execute(sql: "DELETE FROM noteTags")
+            try db.execute(sql: "DELETE FROM noteLinks")
+            try db.execute(sql: "DELETE FROM habitCompletions")
+            try db.execute(sql: "DELETE FROM activityLogs")
+            try db.execute(sql: "DELETE FROM trackedApps")
+            try db.execute(sql: "DELETE FROM tasks")
+            try db.execute(sql: "DELETE FROM boardColumns")
+            try db.execute(sql: "DELETE FROM boards")
+            try db.execute(sql: "DELETE FROM notes")
+            try db.execute(sql: "DELETE FROM tags")
+            try db.execute(sql: "DELETE FROM habits")
+            try db.execute(sql: "DELETE FROM weeklyReviews")
+            try db.execute(sql: "DELETE FROM perspectives")
+            try db.execute(sql: "DELETE FROM projects")
+            try db.execute(sql: "DELETE FROM initiatives")
+            try db.execute(sql: "DELETE FROM goals")
+        }
+        print("✅ Data cleared")
+        try seedSampleData()
+    }
+
+    func seedSampleData() throws {
+        print("🌱 Checking if seed needed...")
+        try dbQueue.write { db in
+            // Check if already seeded
+            let projectCount = try Project.fetchCount(db)
+            print("🌱 Existing project count: \(projectCount)")
+            guard projectCount == 0 else {
+                print("🌱 Already seeded, skipping")
+                return
+            }
+
+            let now = Date()
+
+            // Create sample projects
+            let projects = [
+                Project(id: "proj-1", title: "Website Redesign", description: "Modernize the company website", color: "007AFF", icon: "globe"),
+                Project(id: "proj-2", title: "Mobile App", description: "Build iOS app for customers", color: "34C759", icon: "iphone"),
+                Project(id: "proj-3", title: "Learn Swift", description: "Personal learning project", color: "AF52DE", icon: "book.fill"),
+            ]
+            for project in projects {
+                try project.insert(db)
+            }
+
+            // Create sample tasks
+            let tasks: [Task] = [
+                // Website Redesign tasks
+                Task(id: "task-1", title: "Design homepage mockup", projectId: "proj-1", status: .next, priority: .high, dueDate: Calendar.current.date(byAdding: .day, value: 2, to: now)),
+                Task(id: "task-2", title: "Set up new hosting", projectId: "proj-1", status: .next, priority: .medium),
+                Task(id: "task-3", title: "Migrate content", projectId: "proj-1", status: .inbox),
+
+                // Mobile App tasks
+                Task(id: "task-4", title: "Create project in Xcode", projectId: "proj-2", status: .completed),
+                Task(id: "task-5", title: "Design app icon", projectId: "proj-2", status: .next, priority: .low, dueDate: Calendar.current.date(byAdding: .day, value: 7, to: now)),
+                Task(id: "task-6", title: "Implement login screen", projectId: "proj-2", status: .next, isFlagged: true),
+
+                // Learn Swift tasks
+                Task(id: "task-7", title: "Complete SwiftUI tutorial", projectId: "proj-3", status: .next, dueDate: now),
+                Task(id: "task-8", title: "Build sample project", projectId: "proj-3", status: .inbox),
+
+                // Inbox tasks (no project)
+                Task(id: "task-9", title: "Call dentist", status: .inbox, priority: .high),
+                Task(id: "task-10", title: "Buy groceries", status: .inbox, isFlagged: true),
+                Task(id: "task-11", title: "Review quarterly goals", status: .inbox, dueDate: Calendar.current.date(byAdding: .day, value: 1, to: now)),
+            ]
+            for task in tasks {
+                try task.insert(db)
+            }
+
+            // Create sample tags
+            let tags = [
+                Tag(id: "tag-1", name: "urgent", color: "FF3B30", tagType: .context),
+                Tag(id: "tag-2", name: "waiting", color: "FF9500", tagType: .context),
+                Tag(id: "tag-3", name: "home", color: "5AC8FA", tagType: .area),
+                Tag(id: "tag-4", name: "work", color: "007AFF", tagType: .area),
+            ]
+            for tag in tags {
+                try tag.insert(db)
+            }
+
+            // Create a sample goal
+            let goal = Goal(
+                id: "goal-1",
+                title: "Ship product by Q2",
+                description: "Launch the mobile app to customers",
+                goalType: .quarterly,
+                year: Calendar.current.component(.year, from: now),
+                quarter: 2,
+                status: .active
+            )
+            try goal.insert(db)
+
+            // Create a sample habit
+            let habit = Habit(
+                id: "habit-1",
+                title: "Daily exercise",
+                description: "30 minutes of movement",
+                frequencyType: .daily,
+                color: "34C759",
+                icon: "figure.run"
+            )
+            try habit.insert(db)
+
+            // Create a sample note
+            let note = Note(
+                id: "note-1",
+                title: "Project Ideas",
+                content: "# Project Ideas\n\n- Build a habit tracker\n- Create a recipe app\n- Automate home lighting"
+            )
+            try note.insert(db)
+
+            print("✅ Seeded sample data")
+        }
+    }
+    #endif
 }

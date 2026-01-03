@@ -4,6 +4,17 @@ import GRDB
 
 private typealias AsyncTask = _Concurrency.Task
 
+enum ActivityMonitoringError: LocalizedError {
+    case accessibilityDenied
+
+    var errorDescription: String? {
+        switch self {
+        case .accessibilityDenied:
+            return "Enable Accessibility access for Forge in System Settings → Privacy & Security → Accessibility to start activity tracking."
+        }
+    }
+}
+
 @MainActor
 final class ActivityViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -64,7 +75,11 @@ final class ActivityViewModel: ObservableObject {
 
         // Start monitoring if enabled
         if isMonitoringEnabled {
-            monitor.startMonitoring()
+            if monitor.hasAccessibilityPermission(promptIfNeeded: false) {
+                monitor.startMonitoring()
+            } else {
+                isMonitoringEnabled = false
+            }
         }
     }
 
@@ -79,6 +94,11 @@ final class ActivityViewModel: ObservableObject {
         isMonitoringEnabled.toggle()
 
         if isMonitoringEnabled {
+            guard monitor.hasAccessibilityPermission(promptIfNeeded: true) else {
+                isMonitoringEnabled = false
+                error = ActivityMonitoringError.accessibilityDenied
+                return
+            }
             monitor.startMonitoring()
         } else {
             monitor.stopMonitoring()

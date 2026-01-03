@@ -16,6 +16,7 @@ struct MainNavigationView: View {
             DetailView()
         }
         .navigationSplitViewStyle(.balanced)
+        .background(AppTheme.windowBackground)
         .sheet(isPresented: $appState.showCommandPalette) {
             CommandPaletteView()
         }
@@ -62,12 +63,17 @@ struct ContentListView: View {
             }
         }
         .frame(minWidth: 300)
+        .background(AppTheme.contentBackground)
+        .animation(.easeInOut(duration: 0.2), value: appState.selectedSection)
         .onChange(of: appState.selectedSection) { _, _ in
-            // Clear detail selections when switching sections
-            appState.selectedTaskId = nil
-            appState.selectedNoteId = nil
-            appState.selectedGoalId = nil
-            appState.selectedHabitId = nil
+            withAnimation(.easeInOut(duration: 0.2)) {
+                // Clear detail selections when switching sections
+                appState.selectedTaskId = nil
+                appState.selectedNoteId = nil
+                appState.selectedGoalId = nil
+                appState.selectedInitiativeId = nil
+                appState.selectedHabitId = nil
+            }
         }
     }
 }
@@ -78,6 +84,8 @@ struct ProjectContentView: View {
     let projectId: String
     @State private var viewMode: ViewMode = .list
     @State private var project: Project?
+    @State private var taskCount: Int = 0
+    @State private var completedCount: Int = 0
     @State private var isEditingProject = false
 
     private let repository = ProjectRepository()
@@ -96,28 +104,12 @@ struct ProjectContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header with view mode picker and settings
-            HStack {
-                if let project = project {
-                    Button(action: { isEditingProject = true }) {
-                        Label("Settings", systemImage: "gearshape")
-                    }
-                    .buttonStyle(.borderless)
-                }
-
-                Spacer()
-
-                Picker("View", selection: $viewMode) {
-                    ForEach(ViewMode.allCases, id: \.self) { mode in
-                        Label(mode.rawValue, systemImage: mode.icon)
-                            .tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 150)
+            // Project header
+            if let project = project {
+                projectHeader(project)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+
+            Divider()
 
             // Content
             switch viewMode {
@@ -128,7 +120,7 @@ struct ProjectContentView: View {
             }
         }
         .task {
-            project = try? await repository.fetch(id: projectId)
+            await loadProject()
         }
         .sheet(isPresented: $isEditingProject) {
             if let project = project {
@@ -137,10 +129,95 @@ struct ProjectContentView: View {
         }
         .onChange(of: isEditingProject) { _, isEditing in
             if !isEditing {
-                AsyncTask {
-                    project = try? await repository.fetch(id: projectId)
-                }
+                AsyncTask { await loadProject() }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func projectHeader(_ project: Project) -> some View {
+        let iconColor: Color = project.color.flatMap { Color(hex: $0) } ?? .accentColor
+        let totalTasks = taskCount + completedCount
+        let progress: Double = totalTasks > 0 ? Double(completedCount) / Double(totalTasks) : 0
+
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                // Project icon
+                ZStack {
+                    Circle()
+                        .fill(iconColor.opacity(0.15))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: project.icon ?? "folder")
+                        .font(.title3)
+                        .foregroundColor(iconColor)
+                }
+
+                // Title and description
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(project.title)
+                        .font(.headline)
+                    if let description = project.description, !description.isEmpty {
+                        Text(description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer()
+
+                // Stats
+                if totalTasks > 0 {
+                    HStack(spacing: 16) {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("\(completedCount)/\(totalTasks)")
+                                .font(.headline)
+                                .foregroundColor(iconColor)
+                            Text("completed")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // Progress ring
+                        ZStack {
+                            Circle()
+                                .stroke(iconColor.opacity(0.2), lineWidth: 4)
+                                .frame(width: 32, height: 32)
+                            Circle()
+                                .trim(from: 0, to: progress)
+                                .stroke(iconColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                                .frame(width: 32, height: 32)
+                                .rotationEffect(.degrees(-90))
+                        }
+                    }
+                }
+
+                // View mode picker
+                Picker("View", selection: $viewMode) {
+                    ForEach(ViewMode.allCases, id: \.self) { mode in
+                        Image(systemName: mode.icon)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 80)
+
+                // Settings button
+                Button(action: { isEditingProject = true }) {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.borderless)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+    }
+
+    private func loadProject() async {
+        project = try? await repository.fetch(id: projectId)
+        if let counts = try? await repository.fetchProjectWithTaskCount(id: projectId) {
+            taskCount = counts.taskCount
+            completedCount = counts.completedCount
         }
     }
 }
@@ -200,6 +277,8 @@ struct DetailView: View {
                 NoteEditorView(noteId: noteId)
             } else if let goalId = appState.selectedGoalId {
                 GoalDetailView(goalId: goalId)
+            } else if let initiativeId = appState.selectedInitiativeId {
+                InitiativeDetailView(initiativeId: initiativeId)
             } else if let habitId = appState.selectedHabitId {
                 HabitDetailView(habitId: habitId)
             } else {
@@ -207,6 +286,11 @@ struct DetailView: View {
             }
         }
         .frame(minWidth: 400)
+        .background(AppTheme.cardBackground)
+        .animation(.easeInOut(duration: 0.2), value: appState.selectedTaskId)
+        .animation(.easeInOut(duration: 0.2), value: appState.selectedNoteId)
+        .animation(.easeInOut(duration: 0.2), value: appState.selectedGoalId)
+        .animation(.easeInOut(duration: 0.2), value: appState.selectedHabitId)
     }
 }
 
@@ -217,18 +301,27 @@ struct EmptyDetailView: View {
         VStack(spacing: 16) {
             Image(systemName: "hammer.fill")
                 .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.accent)
 
             Text("Select an item")
                 .font(.headline)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.textPrimary)
 
             Text("Choose a task, note, or goal from the list to view details")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(32)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(AppTheme.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(AppTheme.cardBorder, lineWidth: 1)
+                )
+        )
     }
 }
 

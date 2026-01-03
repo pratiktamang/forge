@@ -183,6 +183,23 @@ final class TaskViewModel: ObservableObject {
         await updateTask(updated)
     }
 
+    func setPriority(_ task: Task, priority: Priority) async {
+        var updated = task
+        updated.priority = priority
+        await updateTask(updated)
+    }
+
+    func setStatus(_ task: Task, status: TaskStatus) async {
+        var updated = task
+        updated.status = status
+        if status == .completed {
+            updated.completedAt = Date()
+        } else {
+            updated.completedAt = nil
+        }
+        await updateTask(updated)
+    }
+
     func moveToProject(_ task: Task, projectId: String?) async {
         do {
             try await repository.moveToProject(task, projectId: projectId)
@@ -230,16 +247,23 @@ final class TaskViewModel: ObservableObject {
 final class TaskDetailViewModel: ObservableObject {
     @Published var task: Task?
     @Published var subtasks: [Task] = []
+    @Published var projects: [Project] = []
+    @Published var allTags: [Tag] = []
+    @Published var taskTags: [Tag] = []
     @Published var isLoading = false
     @Published var error: Error?
 
     private let taskId: String
     private let repository: TaskRepository
+    private let projectRepository: ProjectRepository
+    private let tagRepository: TagRepository
     private var cancellables = Set<AnyCancellable>()
 
-    init(taskId: String, repository: TaskRepository = TaskRepository()) {
+    init(taskId: String, repository: TaskRepository = TaskRepository(), projectRepository: ProjectRepository = ProjectRepository(), tagRepository: TagRepository = TagRepository()) {
         self.taskId = taskId
         self.repository = repository
+        self.projectRepository = projectRepository
+        self.tagRepository = tagRepository
     }
 
     func startObserving() {
@@ -259,9 +283,39 @@ final class TaskDetailViewModel: ObservableObject {
             )
             .store(in: &cancellables)
 
-        // Fetch subtasks
+        // Fetch subtasks, projects, and tags
         AsyncTask {
             await fetchSubtasks()
+            await fetchProjects()
+            await fetchTags()
+        }
+
+        // Observe task tags
+        tagRepository.observeTagsForTask(taskId)
+            .publisher(in: AppDatabase.shared.dbQueue, scheduling: .immediate)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { [weak self] tags in
+                    self?.taskTags = tags
+                }
+            )
+            .store(in: &cancellables)
+    }
+
+    private func fetchProjects() async {
+        do {
+            projects = try await projectRepository.fetchActive()
+        } catch {
+            // Ignore project fetch errors
+        }
+    }
+
+    private func fetchTags() async {
+        do {
+            allTags = try await tagRepository.fetchAll()
+        } catch {
+            // Ignore tag fetch errors
         }
     }
 
@@ -302,6 +356,44 @@ final class TaskDetailViewModel: ObservableObject {
             try? await repository.completeTask(subtask)
         }
         await fetchSubtasks()
+    }
+
+    func deleteSubtask(_ subtask: Task) async {
+        do {
+            try await repository.delete(subtask)
+            await fetchSubtasks()
+        } catch {
+            self.error = error
+        }
+    }
+
+    // MARK: - Tag Operations
+
+    func addTag(_ tag: Tag) async {
+        do {
+            try await tagRepository.addTagToTask(tagId: tag.id, taskId: taskId)
+        } catch {
+            self.error = error
+        }
+    }
+
+    func removeTag(_ tag: Tag) async {
+        do {
+            try await tagRepository.removeTagFromTask(tagId: tag.id, taskId: taskId)
+        } catch {
+            self.error = error
+        }
+    }
+
+    func createAndAddTag(name: String, type: TagType) async {
+        let tag = Tag(name: name, tagType: type)
+        do {
+            try await tagRepository.save(tag)
+            try await tagRepository.addTagToTask(tagId: tag.id, taskId: taskId)
+            await fetchTags()
+        } catch {
+            self.error = error
+        }
     }
 
     private func fetchSubtasks() async {

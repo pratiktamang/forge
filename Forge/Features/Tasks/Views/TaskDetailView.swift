@@ -6,6 +6,9 @@ private typealias AsyncTask = _Concurrency.Task
 struct TaskDetailView: View {
     @StateObject private var viewModel: TaskDetailViewModel
     @State private var newSubtaskTitle = ""
+    @State private var newTagName = ""
+    @State private var isAddingTag = false
+    @State private var newTagType: TagType = .tag
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isNotesFocused: Bool
     @FocusState private var isSubtaskFocused: Bool
@@ -48,6 +51,11 @@ struct TaskDetailView: View {
 
                 // Properties
                 propertiesSection(task)
+
+                Divider()
+
+                // Tags
+                tagsSection
 
                 Divider()
 
@@ -141,6 +149,33 @@ struct TaskDetailView: View {
             Text("Properties")
                 .font(.headline)
 
+            // Quick date buttons
+            HStack(spacing: 8) {
+                quickDateButton("Today", date: Date()) {
+                    viewModel.task?.dueDate = Calendar.current.startOfDay(for: Date())
+                    AsyncTask { await viewModel.save() }
+                }
+                quickDateButton("Tomorrow", date: Calendar.current.date(byAdding: .day, value: 1, to: Date())!) {
+                    viewModel.task?.dueDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date()))
+                    AsyncTask { await viewModel.save() }
+                }
+                quickDateButton("Next Week", date: Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Date())!) {
+                    viewModel.task?.dueDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Calendar.current.startOfDay(for: Date()))
+                    AsyncTask { await viewModel.save() }
+                }
+                if task.dueDate != nil {
+                    Button(action: {
+                        viewModel.task?.dueDate = nil
+                        AsyncTask { await viewModel.save() }
+                    }) {
+                        Label("Clear", systemImage: "xmark")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible())
@@ -150,18 +185,31 @@ struct TaskDetailView: View {
                     icon: "calendar",
                     label: "Due Date",
                     content: {
-                        DatePicker(
-                            "",
-                            selection: Binding(
-                                get: { viewModel.task?.dueDate ?? Date() },
-                                set: {
-                                    viewModel.task?.dueDate = $0
+                        HStack {
+                            DatePicker(
+                                "",
+                                selection: Binding(
+                                    get: { viewModel.task?.dueDate ?? Date() },
+                                    set: {
+                                        viewModel.task?.dueDate = $0
+                                        AsyncTask { await viewModel.save() }
+                                    }
+                                ),
+                                displayedComponents: .date
+                            )
+                            .labelsHidden()
+
+                            if task.dueDate != nil {
+                                Button(action: {
+                                    viewModel.task?.dueDate = nil
                                     AsyncTask { await viewModel.save() }
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.secondary)
                                 }
-                            ),
-                            displayedComponents: .date
-                        )
-                        .labelsHidden()
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 )
 
@@ -170,18 +218,31 @@ struct TaskDetailView: View {
                     icon: "arrow.right.circle",
                     label: "Defer Until",
                     content: {
-                        DatePicker(
-                            "",
-                            selection: Binding(
-                                get: { viewModel.task?.deferDate ?? Date() },
-                                set: {
-                                    viewModel.task?.deferDate = $0
+                        HStack {
+                            DatePicker(
+                                "",
+                                selection: Binding(
+                                    get: { viewModel.task?.deferDate ?? Date() },
+                                    set: {
+                                        viewModel.task?.deferDate = $0
+                                        AsyncTask { await viewModel.save() }
+                                    }
+                                ),
+                                displayedComponents: .date
+                            )
+                            .labelsHidden()
+
+                            if task.deferDate != nil {
+                                Button(action: {
+                                    viewModel.task?.deferDate = nil
                                     AsyncTask { await viewModel.save() }
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.secondary)
                                 }
-                            ),
-                            displayedComponents: .date
-                        )
-                        .labelsHidden()
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 )
 
@@ -199,6 +260,27 @@ struct TaskDetailView: View {
                         )) {
                             ForEach(Priority.allCases, id: \.self) { priority in
                                 Text(priority.displayName).tag(priority)
+                            }
+                        }
+                        .labelsHidden()
+                    }
+                )
+
+                // Project
+                propertyRow(
+                    icon: "folder",
+                    label: "Project",
+                    content: {
+                        Picker("", selection: Binding(
+                            get: { viewModel.task?.projectId },
+                            set: {
+                                viewModel.task?.projectId = $0
+                                AsyncTask { await viewModel.save() }
+                            }
+                        )) {
+                            Text("None").tag(nil as String?)
+                            ForEach(viewModel.projects) { project in
+                                Text(project.title).tag(project.id as String?)
                             }
                         }
                         .labelsHidden()
@@ -227,6 +309,19 @@ struct TaskDetailView: View {
                 )
             }
         }
+    }
+
+    @ViewBuilder
+    private func quickDateButton(_ title: String, date: Date, action: @escaping () -> Void) -> some View {
+        let isSelected = viewModel.task?.dueDate != nil &&
+                         Calendar.current.isDate(viewModel.task!.dueDate!, inSameDayAs: date)
+        Button(action: action) {
+            Text(title)
+                .font(.caption)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .tint(isSelected ? .accentColor : nil)
     }
 
     @ViewBuilder
@@ -286,6 +381,112 @@ struct TaskDetailView: View {
         .menuStyle(.borderlessButton)
     }
 
+    // MARK: - Tags Section
+
+    @ViewBuilder
+    private var tagsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Tags")
+                    .font(.headline)
+
+                Spacer()
+
+                Button(action: { isAddingTag.toggle() }) {
+                    Label("Add", systemImage: "plus")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .popover(isPresented: $isAddingTag) {
+                    addTagPopover
+                }
+            }
+
+            // Current tags
+            if viewModel.taskTags.isEmpty {
+                Text("No tags")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 8)
+            } else {
+                TaskDetailFlowLayout(spacing: 8) {
+                    ForEach(viewModel.taskTags) { tag in
+                        TagChip(tag: tag) {
+                            AsyncTask { await viewModel.removeTag(tag) }
+                        }
+                    }
+                }
+            }
+
+            // Quick add from existing tags
+            if !availableTags.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Available")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    TaskDetailFlowLayout(spacing: 6) {
+                        ForEach(availableTags.prefix(10)) { tag in
+                            Button(action: {
+                                AsyncTask { await viewModel.addTag(tag) }
+                            }) {
+                                Text(tag.displayName)
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var availableTags: [Tag] {
+        viewModel.allTags.filter { tag in
+            !viewModel.taskTags.contains(where: { $0.id == tag.id })
+        }
+    }
+
+    private var addTagPopover: some View {
+        VStack(spacing: 12) {
+            Text("Add Tag")
+                .font(.headline)
+
+            TextField("Tag name", text: $newTagName)
+                .textFieldStyle(.roundedBorder)
+
+            Picker("Type", selection: $newTagType) {
+                ForEach(TagType.allCases, id: \.self) { type in
+                    Text(type.displayName).tag(type)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            HStack {
+                Button("Cancel") {
+                    isAddingTag = false
+                    newTagName = ""
+                }
+
+                Spacer()
+
+                Button("Add") {
+                    AsyncTask {
+                        await viewModel.createAndAddTag(name: newTagName, type: newTagType)
+                        newTagName = ""
+                        isAddingTag = false
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(newTagName.isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 250)
+    }
+
     // MARK: - Notes Section
 
     @ViewBuilder
@@ -323,38 +524,33 @@ struct TaskDetailView: View {
 
                 Spacer()
 
-                Text("\(viewModel.subtasks.filter { $0.status == .completed }.count)/\(viewModel.subtasks.count)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                if !viewModel.subtasks.isEmpty {
+                    Text("\(viewModel.subtasks.filter { $0.status == .completed }.count)/\(viewModel.subtasks.count)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
 
             // Subtask list
-            VStack(spacing: 8) {
+            VStack(spacing: 4) {
                 ForEach(viewModel.subtasks) { subtask in
-                    HStack(spacing: 12) {
-                        Button(action: {
+                    SubtaskRow(
+                        subtask: subtask,
+                        onToggle: {
                             AsyncTask { await viewModel.toggleSubtask(subtask) }
-                        }) {
-                            Image(systemName: subtask.status == .completed ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(subtask.status == .completed ? .green : .secondary)
+                        },
+                        onDelete: {
+                            AsyncTask { await viewModel.deleteSubtask(subtask) }
                         }
-                        .buttonStyle(.plain)
-
-                        Text(subtask.title)
-                            .strikethrough(subtask.status == .completed)
-                            .foregroundColor(subtask.status == .completed ? .secondary : .primary)
-
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
+                    )
                 }
 
                 // Add subtask
                 HStack(spacing: 12) {
                     Image(systemName: "plus.circle")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.accentColor)
 
-                    TextField("Add subtask", text: $newSubtaskTitle)
+                    TextField("Add subtask...", text: $newSubtaskTitle)
                         .textFieldStyle(.plain)
                         .focused($isSubtaskFocused)
                         .onSubmit {
@@ -365,11 +561,154 @@ struct TaskDetailView: View {
                             }
                         }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 8)
             }
             .padding(12)
             .background(Color(nsColor: .controlBackgroundColor))
             .cornerRadius(8)
+        }
+    }
+}
+
+// MARK: - Subtask Row
+
+struct SubtaskRow: View {
+    let subtask: Task
+    let onToggle: () -> Void
+    let onDelete: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: onToggle) {
+                Image(systemName: subtask.status == .completed ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(subtask.status == .completed ? .green : .secondary)
+            }
+            .buttonStyle(.plain)
+
+            Text(subtask.title)
+                .strikethrough(subtask.status == .completed)
+                .foregroundColor(subtask.status == .completed ? .secondary : .primary)
+
+            Spacer()
+
+            if isHovered {
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 4)
+        .background(isHovered ? Color.secondary.opacity(0.05) : Color.clear)
+        .cornerRadius(4)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .contextMenu {
+            Button(action: onToggle) {
+                Label(
+                    subtask.status == .completed ? "Mark Incomplete" : "Mark Complete",
+                    systemImage: subtask.status == .completed ? "circle" : "checkmark.circle"
+                )
+            }
+            Divider()
+            Button(role: .destructive, action: onDelete) {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+    }
+}
+
+// MARK: - Tag Chip
+
+struct TagChip: View {
+    let tag: Tag
+    let onRemove: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(tag.displayName)
+                .font(.caption)
+
+            if isHovered {
+                Button(action: onRemove) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8, weight: .bold))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(tagColor.opacity(0.15))
+        .foregroundColor(tagColor)
+        .cornerRadius(4)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+    }
+
+    private var tagColor: Color {
+        if let hex = tag.color {
+            return Color(hex: hex)
+        }
+        switch tag.tagType {
+        case .tag: return .blue
+        case .context: return .purple
+        case .area: return .green
+        }
+    }
+}
+
+// MARK: - Flow Layout
+
+struct TaskDetailFlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
+        return result.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
+
+        for (index, subview) in subviews.enumerated() {
+            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
+                                     y: bounds.minY + result.positions[index].y),
+                         proposal: .unspecified)
+        }
+    }
+
+    struct FlowResult {
+        var positions: [CGPoint] = []
+        var size: CGSize = .zero
+
+        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
+            var currentX: CGFloat = 0
+            var currentY: CGFloat = 0
+            var lineHeight: CGFloat = 0
+
+            for subview in subviews {
+                let size = subview.sizeThatFits(.unspecified)
+
+                if currentX + size.width > maxWidth && currentX > 0 {
+                    currentX = 0
+                    currentY += lineHeight + spacing
+                    lineHeight = 0
+                }
+
+                positions.append(CGPoint(x: currentX, y: currentY))
+                lineHeight = max(lineHeight, size.height)
+                currentX += size.width + spacing
+            }
+
+            self.size = CGSize(width: maxWidth, height: currentY + lineHeight)
         }
     }
 }

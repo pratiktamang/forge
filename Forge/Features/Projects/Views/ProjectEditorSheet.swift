@@ -11,11 +11,36 @@ struct ProjectEditorSheet: View {
     @State private var description: String
     @State private var selectedInitiativeId: String?
     @State private var status: ProjectStatus
+    @State private var selectedColor: String?
+    @State private var selectedIcon: String
     @State private var initiatives: [InitiativeWithGoal] = []
     @State private var isSaving = false
 
     private let projectRepository = ProjectRepository()
     private let initiativeRepository = InitiativeRepository()
+
+    private let colorOptions: [(name: String, hex: String)] = [
+        ("Blue", "007AFF"),
+        ("Purple", "AF52DE"),
+        ("Pink", "FF2D55"),
+        ("Red", "FF3B30"),
+        ("Orange", "FF9500"),
+        ("Yellow", "FFCC00"),
+        ("Green", "34C759"),
+        ("Teal", "5AC8FA"),
+        ("Gray", "8E8E93")
+    ]
+
+    private let iconOptions = [
+        "folder", "folder.fill", "doc", "doc.fill",
+        "briefcase", "briefcase.fill", "hammer", "hammer.fill",
+        "wrench", "wrench.fill", "gearshape", "gearshape.fill",
+        "star", "star.fill", "heart", "heart.fill",
+        "bolt", "bolt.fill", "lightbulb", "lightbulb.fill",
+        "book", "book.fill", "graduationcap", "graduationcap.fill",
+        "music.note", "gamecontroller", "house", "house.fill",
+        "cart", "cart.fill", "creditcard", "creditcard.fill"
+    ]
 
     struct InitiativeWithGoal: Identifiable {
         let initiative: Initiative
@@ -36,6 +61,8 @@ struct ProjectEditorSheet: View {
         _description = State(initialValue: project.description ?? "")
         _selectedInitiativeId = State(initialValue: project.initiativeId)
         _status = State(initialValue: project.status)
+        _selectedColor = State(initialValue: project.color)
+        _selectedIcon = State(initialValue: project.icon ?? "folder")
     }
 
     var body: some View {
@@ -59,9 +86,66 @@ struct ProjectEditorSheet: View {
             // Form
             Form {
                 Section("Details") {
-                    TextField("Title", text: $title)
+                    HStack(spacing: 12) {
+                        // Icon preview
+                        ZStack {
+                            Circle()
+                                .fill(selectedColor != nil ? Color(hex: selectedColor!) : Color.accentColor)
+                                .frame(width: 44, height: 44)
+                            Image(systemName: selectedIcon)
+                                .font(.title2)
+                                .foregroundColor(.white)
+                        }
+
+                        TextField("Title", text: $title)
+                    }
+
                     TextField("Description", text: $description, axis: .vertical)
                         .lineLimit(3...6)
+                }
+
+                Section("Appearance") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Color")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        HStack(spacing: 8) {
+                            ForEach(colorOptions, id: \.hex) { option in
+                                Button(action: { selectedColor = option.hex }) {
+                                    Circle()
+                                        .fill(Color(hex: option.hex))
+                                        .frame(width: 28, height: 28)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.primary, lineWidth: selectedColor == option.hex ? 2 : 0)
+                                                .padding(2)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Icon")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        LazyVGrid(columns: Array(repeating: GridItem(.fixed(36)), count: 8), spacing: 8) {
+                            ForEach(iconOptions, id: \.self) { icon in
+                                Button(action: { selectedIcon = icon }) {
+                                    Image(systemName: icon)
+                                        .font(.system(size: 16))
+                                        .frame(width: 32, height: 32)
+                                        .background(selectedIcon == icon ? Color.accentColor.opacity(0.2) : Color.clear)
+                                        .cornerRadius(6)
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundColor(selectedIcon == icon ? .accentColor : .primary)
+                            }
+                        }
+                    }
                 }
 
                 Section("Status") {
@@ -89,7 +173,7 @@ struct ProjectEditorSheet: View {
             }
             .formStyle(.grouped)
         }
-        .frame(width: 450, height: 400)
+        .frame(width: 500, height: 550)
         .task {
             await loadInitiatives()
         }
@@ -122,6 +206,8 @@ struct ProjectEditorSheet: View {
             updatedProject.description = description.isEmpty ? nil : description
             updatedProject.initiativeId = selectedInitiativeId
             updatedProject.status = status
+            updatedProject.color = selectedColor
+            updatedProject.icon = selectedIcon
 
             do {
                 try await projectRepository.save(updatedProject)

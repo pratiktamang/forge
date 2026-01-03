@@ -8,6 +8,8 @@ struct InitiativeDetailView: View {
     @EnvironmentObject var appState: AppState
     @State private var isAddingProject = false
     @State private var newProjectTitle = ""
+    @State private var showDeleteConfirmation = false
+    @State private var isEditingTitle = false
 
     init(initiativeId: String) {
         _viewModel = StateObject(wrappedValue: InitiativeViewModel(initiativeId: initiativeId))
@@ -49,10 +51,8 @@ struct InitiativeDetailView: View {
                 Divider()
 
                 // Timeline
-                if initiative.startDate != nil || initiative.targetDate != nil {
-                    timelineSection(initiative)
-                    Divider()
-                }
+                timelineSection(initiative)
+                Divider()
 
                 // Description
                 descriptionSection(initiative)
@@ -75,6 +75,24 @@ struct InitiativeDetailView: View {
     private func headerSection(_ initiative: Initiative) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
+                if let goalId = initiative.goalId {
+                    Button(action: {
+                        appState.selectedInitiativeId = nil
+                        appState.selectedGoalId = goalId
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.caption)
+                            Text("Back to Goal")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Spacer()
+
                 Text("Initiative")
                     .font(.caption)
                     .padding(.horizontal, 8)
@@ -83,18 +101,42 @@ struct InitiativeDetailView: View {
                     .foregroundColor(.purple)
                     .cornerRadius(4)
 
-                Spacer()
-
                 statusMenu(initiative)
             }
 
-            Text(initiative.title)
-                .font(.title.weight(.bold))
+            HStack(spacing: 8) {
+                if isEditingTitle {
+                    TextField("Initiative title", text: Binding(
+                        get: { viewModel.initiative?.title ?? "" },
+                        set: { viewModel.initiative?.title = $0 }
+                    ))
+                    .font(.title.weight(.bold))
+                    .textFieldStyle(.plain)
+                    .onSubmit {
+                        isEditingTitle = false
+                        AsyncTask { await viewModel.save() }
+                    }
 
-            if let description = initiative.description {
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    Button(action: {
+                        isEditingTitle = false
+                        AsyncTask { await viewModel.save() }
+                    }) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(initiative.title)
+                        .font(.title.weight(.bold))
+
+                    Button(action: { isEditingTitle = true }) {
+                        Image(systemName: "pencil")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(0.6)
+                }
             }
         }
     }
@@ -110,6 +152,12 @@ struct InitiativeDetailView: View {
                     Label(status.displayName, systemImage: statusIcon(status))
                 }
             }
+
+            Divider()
+
+            Button(role: .destructive, action: { showDeleteConfirmation = true }) {
+                Label("Delete Initiative", systemImage: "trash")
+            }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: statusIcon(initiative.status))
@@ -123,6 +171,22 @@ struct InitiativeDetailView: View {
             .cornerRadius(4)
         }
         .menuStyle(.borderlessButton)
+        .confirmationDialog(
+            "Delete Initiative",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                AsyncTask {
+                    if await viewModel.delete() {
+                        appState.selectedInitiativeId = nil
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to delete \"\(initiative.title)\"? This action cannot be undone.")
+        }
     }
 
     private func statusIcon(_ status: InitiativeStatus) -> String {
@@ -177,33 +241,82 @@ struct InitiativeDetailView: View {
                 .font(.headline)
 
             HStack(spacing: 20) {
-                if let startDate = initiative.startDate {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Start")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text(startDate.formatted(.dateTime.month().day().year()))
-                            .font(.subheadline)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Start")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    HStack(spacing: 4) {
+                        DatePicker(
+                            "",
+                            selection: Binding(
+                                get: { viewModel.initiative?.startDate ?? Date() },
+                                set: { viewModel.initiative?.startDate = $0 }
+                            ),
+                            displayedComponents: .date
+                        )
+                        .labelsHidden()
+                        .onChange(of: viewModel.initiative?.startDate) { _, _ in
+                            AsyncTask { await viewModel.save() }
+                        }
+
+                        if viewModel.initiative?.startDate != nil {
+                            Button(action: {
+                                viewModel.initiative?.startDate = nil
+                                AsyncTask { await viewModel.save() }
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
 
-                if initiative.startDate != nil && initiative.targetDate != nil {
-                    Image(systemName: "arrow.right")
-                        .foregroundColor(.secondary)
-                }
+                Image(systemName: "arrow.right")
+                    .foregroundColor(.secondary)
 
-                if let targetDate = initiative.targetDate {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Target")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text(targetDate.formatted(.dateTime.month().day().year()))
-                            .font(.subheadline)
-                            .foregroundColor(targetDate < Date() ? .red : .primary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Target")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    HStack(spacing: 4) {
+                        DatePicker(
+                            "",
+                            selection: Binding(
+                                get: { viewModel.initiative?.targetDate ?? Date() },
+                                set: { viewModel.initiative?.targetDate = $0 }
+                            ),
+                            displayedComponents: .date
+                        )
+                        .labelsHidden()
+                        .onChange(of: viewModel.initiative?.targetDate) { _, _ in
+                            AsyncTask { await viewModel.save() }
+                        }
+
+                        if viewModel.initiative?.targetDate != nil {
+                            Button(action: {
+                                viewModel.initiative?.targetDate = nil
+                                AsyncTask { await viewModel.save() }
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
 
                 Spacer()
+
+                if let targetDate = initiative.targetDate {
+                    if targetDate < Date() && initiative.status == .active {
+                        Label("Overdue", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
             }
             .padding(12)
             .background(Color(nsColor: .controlBackgroundColor))
@@ -305,6 +418,7 @@ struct InitiativeDetailView: View {
 
 struct ProjectRow: View {
     let project: Project
+    @State private var isHovered = false
 
     var body: some View {
         HStack {
@@ -329,11 +443,18 @@ struct ProjectRow: View {
             }
 
             Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
+                .foregroundColor(isHovered ? .accentColor : .secondary)
         }
         .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(isHovered ? Color.accentColor.opacity(0.05) : Color(nsColor: .controlBackgroundColor))
         .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isHovered ? Color.accentColor.opacity(0.2) : Color.clear, lineWidth: 1)
+        )
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
 

@@ -8,6 +8,8 @@ struct GoalListView: View {
     @EnvironmentObject var appState: AppState
     @State private var isAddingGoal = false
     @State private var selectedYearTab: Int
+    @State private var addingQuarterlyGoalForQuarter: Int? = nil
+    @State private var goalToDelete: Goal? = nil
 
     init() {
         let currentYear = Calendar.current.component(.year, from: Date())
@@ -41,6 +43,38 @@ struct GoalListView: View {
         }
         .sheet(isPresented: $isAddingGoal) {
             AddGoalSheet(year: selectedYearTab, viewModel: viewModel)
+        }
+        .sheet(isPresented: Binding(
+            get: { addingQuarterlyGoalForQuarter != nil },
+            set: { if !$0 { addingQuarterlyGoalForQuarter = nil } }
+        )) {
+            if let quarter = addingQuarterlyGoalForQuarter {
+                AddQuarterlyGoalSheet(year: selectedYearTab, quarter: quarter, viewModel: viewModel)
+            }
+        }
+        .confirmationDialog(
+            "Delete Goal",
+            isPresented: Binding(
+                get: { goalToDelete != nil },
+                set: { if !$0 { goalToDelete = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let goal = goalToDelete {
+                    AsyncTask {
+                        await viewModel.deleteGoal(goal)
+                        goalToDelete = nil
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                goalToDelete = nil
+            }
+        } message: {
+            if let goal = goalToDelete {
+                Text("Are you sure you want to delete \"\(goal.title)\"? This action cannot be undone.")
+            }
         }
         .onAppear {
             viewModel.startObserving()
@@ -121,10 +155,22 @@ struct GoalListView: View {
             }
 
             ForEach(goals) { goal in
-                GoalCard(goal: goal, style: .yearly)
-                    .onTapGesture {
-                        appState.selectedGoalId = goal.id
-                    }
+                GoalCard(
+                    goal: goal,
+                    style: .yearly,
+                    onStatusChange: { status in
+                        AsyncTask {
+                            var updated = goal
+                            updated.status = status
+                            if status == .completed { updated.progress = 1.0 }
+                            await viewModel.updateGoal(updated)
+                        }
+                    },
+                    onDelete: { goalToDelete = goal }
+                )
+                .onTapGesture {
+                    appState.selectedGoalId = goal.id
+                }
             }
         }
     }
@@ -169,17 +215,29 @@ struct GoalListView: View {
             }
 
             if goals.isEmpty {
-                Text("No goals")
+                Text("No goals yet")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 20)
             } else {
                 ForEach(goals) { goal in
-                    GoalCard(goal: goal, style: .quarterly)
-                        .onTapGesture {
-                            appState.selectedGoalId = goal.id
-                        }
+                    GoalCard(
+                        goal: goal,
+                        style: .quarterly,
+                        onStatusChange: { status in
+                            AsyncTask {
+                                var updated = goal
+                                updated.status = status
+                                if status == .completed { updated.progress = 1.0 }
+                                await viewModel.updateGoal(updated)
+                            }
+                        },
+                        onDelete: { goalToDelete = goal }
+                    )
+                    .onTapGesture {
+                        appState.selectedGoalId = goal.id
+                    }
                 }
             }
 
@@ -198,21 +256,40 @@ struct GoalListView: View {
     // MARK: - Empty State
 
     private var emptyYearState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Image(systemName: "target")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .font(.system(size: 56))
+                .foregroundStyle(.linearGradient(
+                    colors: [.blue, .purple],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
 
-            Text("No goals for \(selectedYearTab)")
-                .font(.headline)
-                .foregroundColor(.secondary)
+            VStack(spacing: 8) {
+                Text("Set Your Goals for \(selectedYearTab)")
+                    .font(.title2.weight(.semibold))
 
-            Button(action: { isAddingGoal = true }) {
-                Label("Add Your First Goal", systemImage: "plus")
+                Text("What do you want to achieve this year?\nStart with a yearly goal or break it down by quarter.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 300)
             }
-            .buttonStyle(.borderedProminent)
+
+            HStack(spacing: 12) {
+                Button(action: { isAddingGoal = true }) {
+                    Label("Add Yearly Goal", systemImage: "plus")
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button(action: { addingQuarterlyGoalForQuarter = viewModel.currentQuarter }) {
+                    Label("Add Q\(viewModel.currentQuarter) Goal", systemImage: "plus")
+                }
+                .buttonStyle(.bordered)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .textBackgroundColor))
     }
 
     // MARK: - Helpers
@@ -228,7 +305,107 @@ struct GoalListView: View {
     }
 
     private func addQuarterlyGoal(quarter: Int) {
-        // TODO: Show add quarterly goal sheet
+        addingQuarterlyGoalForQuarter = quarter
+    }
+}
+
+// MARK: - Add Quarterly Goal Sheet
+
+struct AddQuarterlyGoalSheet: View {
+    let year: Int
+    let quarter: Int
+    @ObservedObject var viewModel: GoalViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var title = ""
+    @State private var description = ""
+    @State private var selectedParentGoalId: String? = nil
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("New Q\(quarter) Goal")
+                    .font(.headline)
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+
+            Divider()
+
+            // Form
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Title")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    TextField("What do you want to achieve?", text: $title)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Description")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    TextField("Optional details...", text: $description, axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(2...4)
+                }
+
+                if !(viewModel.goals(for: year)?.yearlyGoals.isEmpty ?? true) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Link to Yearly Goal")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Picker("", selection: $selectedParentGoalId) {
+                            Text("None").tag(nil as String?)
+                            ForEach(viewModel.goals(for: year)?.yearlyGoals ?? []) { goal in
+                                Text(goal.title).tag(goal.id as String?)
+                            }
+                        }
+                        .labelsHidden()
+                    }
+                }
+            }
+            .padding()
+
+            Spacer()
+
+            Divider()
+
+            // Actions
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .keyboardShortcut(.escape)
+
+                Spacer()
+
+                Button("Create Goal") {
+                    AsyncTask {
+                        await viewModel.createQuarterlyGoal(
+                            title: title,
+                            description: description.isEmpty ? nil : description,
+                            year: year,
+                            quarter: quarter,
+                            parentGoalId: selectedParentGoalId
+                        )
+                        dismiss()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return)
+                .disabled(title.isEmpty)
+            }
+            .padding()
+        }
+        .frame(width: 400, height: 320)
     }
 }
 
@@ -237,6 +414,9 @@ struct GoalListView: View {
 struct GoalCard: View {
     let goal: Goal
     let style: Style
+    var onStatusChange: ((GoalStatus) -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
+    @State private var isHovered = false
 
     enum Style {
         case yearly
@@ -281,12 +461,41 @@ struct GoalCard: View {
             }
         }
         .padding(12)
-        .background(Color(nsColor: .textBackgroundColor))
+        .background(isHovered ? Color.accentColor.opacity(0.05) : Color(nsColor: .textBackgroundColor))
         .cornerRadius(8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(borderColor, lineWidth: 1)
+                .stroke(isHovered ? Color.accentColor.opacity(0.3) : borderColor, lineWidth: isHovered ? 1.5 : 1)
         )
+        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .contextMenu {
+            Button(action: { onStatusChange?(.active) }) {
+                Label("Mark Active", systemImage: "circle")
+            }
+            .disabled(goal.status == .active)
+
+            Button(action: { onStatusChange?(.completed) }) {
+                Label("Mark Completed", systemImage: "checkmark.circle")
+            }
+            .disabled(goal.status == .completed)
+
+            Button(action: { onStatusChange?(.archived) }) {
+                Label("Archive", systemImage: "archivebox")
+            }
+            .disabled(goal.status == .archived)
+
+            if onDelete != nil {
+                Divider()
+
+                Button(role: .destructive, action: { onDelete?() }) {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+        }
     }
 
     private var statusBadge: some View {

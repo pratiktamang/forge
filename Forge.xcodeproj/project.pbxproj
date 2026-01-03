@@ -35,6 +35,7 @@
 		5964CBC4BF577D59EB102B62 /* Goal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FB21CAF3048C9243E54BDA /* Goal.swift */; };
 		598C04F71D90DAF8B9B88556 /* VimState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC991B8564280477D16A8D5 /* VimState.swift */; };
 		5E45070F9EA3C6438A9B60E6 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 22B3F54939D8563083E5E398 /* KeyboardShortcuts */; };
+		64DAB72160CDD48CA4B5F1AF /* TagRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02791D6B9D9977B35063DBA /* TagRepository.swift */; };
 		6533889317C1F9FBE3653976 /* GoalDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35445E549CC8C1F0CCD50971 /* GoalDetailView.swift */; };
 		6E17C0B10410EFF44918F719 /* Tag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A7405BBB89F4217736C827 /* Tag.swift */; };
 		6F373EA8C2F8BEF476C23EF9 /* Perspective.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A59C2B5C4DCB929E4857DB /* Perspective.swift */; };
@@ -150,6 +151,7 @@
 		CC4FD49B9F0E4B339A05E56E /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Task.swift; sourceTree = "<group>"; };
 		D02552FD518FCC09D372D728 /* HabitRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitRepository.swift; sourceTree = "<group>"; };
 		D4FD47EACD0A645BDC107302 /* MarkdownEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownEditorView.swift; sourceTree = "<group>"; };
+		E02791D6B9D9977B35063DBA /* TagRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagRepository.swift; sourceTree = "<group>"; };
 		E465A9E6BE8CBC6C8D286ECB /* NoteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteListView.swift; sourceTree = "<group>"; };
 		E99304970548F9E155A3AFEF /* GoalRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalRepository.swift; sourceTree = "<group>"; };
 		EAD57FE43439B2C292022C07 /* Forge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Forge.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -463,6 +465,7 @@
 				A8BC687225BC30388FC3D4E3 /* NoteRepository.swift */,
 				AF2DBB9C6A755401F09769D3 /* PerspectiveRepository.swift */,
 				C6876C7CDFECDF1AA0DEB5EA /* ProjectRepository.swift */,
+				E02791D6B9D9977B35063DBA /* TagRepository.swift */,
 				A894369FAEB06E7A2AEBBE65 /* TaskRepository.swift */,
 				29696C9590B6F17186B87164 /* WeeklyReviewRepository.swift */,
 			);
@@ -788,6 +791,7 @@
 				9E2EDB88BEAD52C7320FC4CB /* QuickCaptureView.swift in Sources */,
 				B1C4E72AF1378C0246056048 /* SidebarView.swift in Sources */,
 				6E17C0B10410EFF44918F719 /* Tag.swift in Sources */,
+				64DAB72160CDD48CA4B5F1AF /* TagRepository.swift in Sources */,
 				28E76C9AE2A4C9BB457D2DB4 /* Task.swift in Sources */,
 				E64105D6C7B9CC744021508B /* TaskDetailView.swift in Sources */,
 				8C587C1CBE212572A3138A01 /* TaskListView.swift in Sources */,

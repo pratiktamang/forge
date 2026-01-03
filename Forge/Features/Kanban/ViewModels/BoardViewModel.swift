@@ -18,6 +18,7 @@ final class BoardViewModel: ObservableObject {
     private let boardRepository: BoardRepository
     private let taskRepository: TaskRepository
     private var cancellables = Set<AnyCancellable>()
+    private var columnTaskCancellables: [String: AnyCancellable] = [:]
 
     // MARK: - Init
 
@@ -69,8 +70,21 @@ final class BoardViewModel: ObservableObject {
     }
 
     private func observeTasksForColumns(_ columns: [BoardColumn]) {
+        let columnIds = Set(columns.map(\.id))
+
+        // Cancel observations for removed columns
+        for (columnId, cancellable) in columnTaskCancellables {
+            if !columnIds.contains(columnId) {
+                cancellable.cancel()
+                columnTaskCancellables.removeValue(forKey: columnId)
+                tasksByColumn.removeValue(forKey: columnId)
+            }
+        }
+
         for column in columns {
-            taskRepository.observeByBoardColumn(column.id)
+            guard columnTaskCancellables[column.id] == nil else { continue }
+
+            let cancellable = taskRepository.observeByBoardColumn(column.id)
                 .publisher(in: AppDatabase.shared.dbQueue, scheduling: .immediate)
                 .receive(on: DispatchQueue.main)
                 .sink(
@@ -79,12 +93,15 @@ final class BoardViewModel: ObservableObject {
                         self?.tasksByColumn[column.id] = tasks
                     }
                 )
-                .store(in: &cancellables)
+
+            columnTaskCancellables[column.id] = cancellable
         }
     }
 
     func stopObserving() {
         cancellables.removeAll()
+        columnTaskCancellables.values.forEach { $0.cancel() }
+        columnTaskCancellables.removeAll()
     }
 
     // MARK: - Column Actions

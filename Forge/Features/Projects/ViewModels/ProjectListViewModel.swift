@@ -6,9 +6,13 @@ private typealias AsyncTask = _Concurrency.Task
 
 @MainActor
 final class ProjectListViewModel: ObservableObject {
-    @Published var projects: [Project] = []
+    @Published var projectsWithCounts: [ProjectRepository.ProjectWithTaskCount] = []
     @Published var isLoading = false
     @Published var error: Error?
+
+    var projects: [Project] {
+        projectsWithCounts.map { $0.project }
+    }
 
     private let repository: ProjectRepository
     private var cancellable: AnyCancellable?
@@ -18,7 +22,7 @@ final class ProjectListViewModel: ObservableObject {
     }
 
     func startObserving() {
-        cancellable = repository.observeActive()
+        cancellable = repository.observeActiveWithTaskCounts()
             .publisher(in: AppDatabase.shared.dbQueue, scheduling: .immediate)
             .receive(on: DispatchQueue.main)
             .sink(
@@ -27,8 +31,8 @@ final class ProjectListViewModel: ObservableObject {
                         self?.error = error
                     }
                 },
-                receiveValue: { [weak self] projects in
-                    self?.projects = projects
+                receiveValue: { [weak self] projectsWithCounts in
+                    self?.projectsWithCounts = projectsWithCounts
                 }
             )
     }
@@ -36,6 +40,14 @@ final class ProjectListViewModel: ObservableObject {
     func stopObserving() {
         cancellable?.cancel()
         cancellable = nil
+    }
+
+    func taskCount(for projectId: String) -> Int {
+        projectsWithCounts.first { $0.project.id == projectId }?.taskCount ?? 0
+    }
+
+    func completedCount(for projectId: String) -> Int {
+        projectsWithCounts.first { $0.project.id == projectId }?.completedCount ?? 0
     }
 
     func createProject(title: String) async {
@@ -47,9 +59,30 @@ final class ProjectListViewModel: ObservableObject {
         }
     }
 
+    func updateProject(_ project: Project) async {
+        do {
+            try await repository.save(project)
+        } catch {
+            self.error = error
+        }
+    }
+
     func deleteProject(_ project: Project) async {
         do {
             try await repository.delete(project)
+        } catch {
+            self.error = error
+        }
+    }
+
+    func duplicateProject(_ project: Project) async {
+        var newProject = project
+        newProject.id = UUID().uuidString
+        newProject.title = "\(project.title) (Copy)"
+        newProject.createdAt = Date()
+        newProject.updatedAt = Date()
+        do {
+            try await repository.save(newProject)
         } catch {
             self.error = error
         }

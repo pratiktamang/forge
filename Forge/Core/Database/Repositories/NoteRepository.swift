@@ -12,16 +12,14 @@ final class NoteRepository {
     // MARK: - CRUD Operations
 
     func save(_ note: Note) async throws {
-        var noteToSave = note
-        noteToSave.updatedAt = Date()
-        noteToSave.wordCount = note.content.split(separator: " ").count
-
         try await database.dbQueue.write { db in
-            try noteToSave.save(db)
-        }
+            var noteToSave = note
+            noteToSave.updatedAt = Date()
+            noteToSave.wordCount = note.content.split(separator: " ").count
 
-        // Update wiki links
-        try await updateWikiLinks(for: noteToSave)
+            try noteToSave.save(db)
+            try updateWikiLinks(for: noteToSave, in: db)
+        }
     }
 
     func delete(_ note: Note) async throws {
@@ -170,24 +168,21 @@ final class NoteRepository {
         }
     }
 
-    private func updateWikiLinks(for note: Note) async throws {
+    private func updateWikiLinks(for note: Note, in db: Database) throws {
         let wikiLinks = note.wikiLinks
 
-        try await database.dbQueue.write { db in
-            // Remove old links from this note
-            try db.execute(sql: "DELETE FROM noteLinks WHERE sourceNoteId = ?", arguments: [note.id])
+        // Remove old links from this note
+        try db.execute(sql: "DELETE FROM noteLinks WHERE sourceNoteId = ?", arguments: [note.id])
 
-            // Add new links
-            for linkText in wikiLinks {
-                // Find target note by title
-                if let targetNote = try Note.filter(Column("title") == linkText).fetchOne(db) {
-                    let link = NoteLink(
-                        sourceNoteId: note.id,
-                        targetNoteId: targetNote.id,
-                        linkText: linkText
-                    )
-                    try link.save(db)
-                }
+        // Add new links
+        for linkText in wikiLinks {
+            if let targetNote = try Note.filter(Column("title") == linkText).fetchOne(db) {
+                let link = NoteLink(
+                    sourceNoteId: note.id,
+                    targetNoteId: targetNote.id,
+                    linkText: linkText
+                )
+                try link.save(db)
             }
         }
     }

@@ -13,19 +13,22 @@ struct CalendarTaskList: View {
             // Date header
             HStack {
                 Text(viewModel.selectedDateFormatted)
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(AppTheme.textPrimary)
 
                 Spacer()
 
                 Text("\(viewModel.tasksForSelectedDate.count) tasks")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppTheme.textSecondary)
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(AppTheme.selectionBackground)
 
-            Divider()
+            Rectangle()
+                .fill(AppTheme.cardBorder)
+                .frame(height: 1)
 
             if viewModel.tasksForSelectedDate.isEmpty && !isAddingTask {
                 emptyState
@@ -36,6 +39,7 @@ struct CalendarTaskList: View {
             // Quick add bar
             quickAddBar
         }
+        .background(AppTheme.contentBackground)
     }
 
     // MARK: - Task List
@@ -45,6 +49,7 @@ struct CalendarTaskList: View {
             ForEach(viewModel.tasksForSelectedDate) { task in
                 TaskRowView(
                     task: task,
+                    isSelected: appState.selectedTaskId == task.id,
                     onToggleComplete: {
                         AsyncTask { await viewModel.toggleComplete(task) }
                     },
@@ -57,7 +62,9 @@ struct CalendarTaskList: View {
             }
             .onDelete(perform: deleteTasks)
         }
-        .listStyle(.inset)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.contentBackground)
     }
 
     // MARK: - Empty State
@@ -66,11 +73,11 @@ struct CalendarTaskList: View {
         VStack(spacing: 12) {
             Image(systemName: "calendar.badge.checkmark")
                 .font(.system(size: 36))
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.accent)
 
             Text("No tasks scheduled")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.textSecondary)
 
             Button(action: { isAddingTask = true }) {
                 Label("Add Task", systemImage: "plus")
@@ -78,8 +85,19 @@ struct CalendarTaskList: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
         }
+        .padding(32)
+        .frame(maxWidth: 320)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(AppTheme.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(AppTheme.emptyStateBorder, lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .background(AppTheme.contentBackground)
     }
 
     // MARK: - Quick Add Bar
@@ -87,11 +105,19 @@ struct CalendarTaskList: View {
     private var quickAddBar: some View {
         HStack(spacing: 12) {
             Image(systemName: "plus.circle.fill")
-                .foregroundColor(.accentColor)
+                .foregroundColor(AppTheme.accent)
                 .font(.title2)
 
             TextField("Add task for \(shortDateString)...", text: $newTaskTitle)
                 .textFieldStyle(.plain)
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundColor(AppTheme.textPrimary)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(AppTheme.cardBackground)
+                )
                 .focused($isAddingTask)
                 .onSubmit {
                     addTask()
@@ -100,15 +126,26 @@ struct CalendarTaskList: View {
             if !newTaskTitle.isEmpty {
                 Button(action: addTask) {
                     Text("Add")
-                        .fontWeight(.medium)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(AppTheme.pillPurple)
+                        )
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .padding(.vertical, 14)
+        .background(AppTheme.quickAddBackground)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(AppTheme.quickAddBorder)
+                .frame(height: 1)
+        }
     }
 
     // MARK: - Helpers

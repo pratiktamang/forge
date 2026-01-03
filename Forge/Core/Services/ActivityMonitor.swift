@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import Combine
+import ApplicationServices
 
 private typealias AsyncTask = _Concurrency.Task
 
@@ -156,11 +157,13 @@ final class ActivityMonitor: ObservableObject {
                 return
             }
 
+            let windowTitle = fetchWindowTitle(for: app)
+
             // Start new session
             currentSession = ActivitySession(
                 trackedApp: trackedApp,
                 startTime: Date(),
-                windowTitle: nil
+                windowTitle: windowTitle
             )
             currentApp = app
 
@@ -199,4 +202,35 @@ final class ActivityMonitor: ObservableObject {
 
 extension ActivityMonitor {
     static let isEnabledKey = "activityMonitoringEnabled"
+
+    func hasAccessibilityPermission(promptIfNeeded: Bool) -> Bool {
+        if AXIsProcessTrusted() {
+            return true
+        }
+
+        guard promptIfNeeded else {
+            return false
+        }
+
+        let optionKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        let options = [optionKey: true] as CFDictionary
+        return AXIsProcessTrustedWithOptions(options)
+    }
+
+    private func fetchWindowTitle(for app: NSRunningApplication) -> String? {
+        let axApp = AXUIElementCreateApplication(app.processIdentifier)
+        var window: AnyObject?
+        let result = AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &window)
+        guard result == .success, let axWindow = window else {
+            return nil
+        }
+
+        var title: AnyObject?
+        let titleResult = AXUIElementCopyAttributeValue(axWindow as! AXUIElement, kAXTitleAttribute as CFString, &title)
+        if titleResult == .success, let titleString = title as? String, !titleString.isEmpty {
+            return titleString
+        }
+
+        return nil
+    }
 }

@@ -5,10 +5,14 @@ private typealias AsyncTask = _Concurrency.Task
 
 struct GoalDetailView: View {
     @StateObject private var viewModel: GoalDetailViewModel
+    @EnvironmentObject var appState: AppState
     @State private var isEditingTitle = false
     @State private var isAddingInitiative = false
     @State private var isAddingQuarterlyGoal = false
     @State private var newInitiativeTitle = ""
+    @State private var newQuarterlyGoalTitle = ""
+    @State private var selectedQuarter: Int = 1
+    @State private var showDeleteConfirmation = false
 
     init(goalId: String) {
         _viewModel = StateObject(wrappedValue: GoalDetailViewModel(goalId: goalId))
@@ -46,16 +50,19 @@ struct GoalDetailView: View {
 
                 Divider()
 
+                // Target Date
+                targetDateSection(goal)
+
+                Divider()
+
                 // Progress
                 progressSection(goal)
 
                 Divider()
 
                 // Description
-                if goal.description != nil || true {
-                    descriptionSection(goal)
-                    Divider()
-                }
+                descriptionSection(goal)
+                Divider()
 
                 // Child Goals (for yearly goals)
                 if goal.goalType == .yearly {
@@ -98,24 +105,111 @@ struct GoalDetailView: View {
             }
 
             // Title
-            if isEditingTitle {
-                TextField("Goal title", text: Binding(
-                    get: { viewModel.goal?.title ?? "" },
-                    set: { viewModel.goal?.title = $0 }
-                ))
-                .font(.title.weight(.bold))
-                .textFieldStyle(.plain)
-                .onSubmit {
-                    isEditingTitle = false
+            HStack(spacing: 8) {
+                if isEditingTitle {
+                    TextField("Goal title", text: Binding(
+                        get: { viewModel.goal?.title ?? "" },
+                        set: { viewModel.goal?.title = $0 }
+                    ))
+                    .font(.title.weight(.bold))
+                    .textFieldStyle(.plain)
+                    .onSubmit {
+                        isEditingTitle = false
+                        AsyncTask { await viewModel.save() }
+                    }
+
+                    Button(action: {
+                        isEditingTitle = false
+                        AsyncTask { await viewModel.save() }
+                    }) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(goal.title)
+                        .font(.title.weight(.bold))
+
+                    Button(action: { isEditingTitle = true }) {
+                        Image(systemName: "pencil")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(0.6)
+                }
+            }
+        }
+    }
+
+    // MARK: - Target Date Section
+
+    @ViewBuilder
+    private func targetDateSection(_ goal: Goal) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Target Date")
+                .font(.headline)
+
+            HStack {
+                DatePicker(
+                    "",
+                    selection: Binding(
+                        get: { viewModel.goal?.targetDate ?? Date() },
+                        set: { viewModel.goal?.targetDate = $0 }
+                    ),
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .onChange(of: viewModel.goal?.targetDate) { _, _ in
                     AsyncTask { await viewModel.save() }
                 }
-            } else {
-                Text(goal.title)
-                    .font(.title.weight(.bold))
-                    .onTapGesture(count: 2) {
-                        isEditingTitle = true
+
+                if viewModel.goal?.targetDate != nil {
+                    Button(action: {
+                        viewModel.goal?.targetDate = nil
+                        AsyncTask { await viewModel.save() }
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
                     }
+                    .buttonStyle(.plain)
+                }
+
+                Spacer()
+
+                if let targetDate = goal.targetDate {
+                    if targetDate < Date() && goal.status == .active {
+                        Label("Overdue", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    } else {
+                        Text(relativeDateString(targetDate))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
+        }
+    }
+
+    private func relativeDateString(_ date: Date) -> String {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.day], from: now, to: date)
+
+        guard let days = components.day else { return "" }
+
+        if days == 0 {
+            return "Due today"
+        } else if days == 1 {
+            return "Due tomorrow"
+        } else if days > 0 && days <= 7 {
+            return "Due in \(days) days"
+        } else if days > 7 {
+            let weeks = days / 7
+            return weeks == 1 ? "Due in 1 week" : "Due in \(weeks) weeks"
+        } else {
+            return ""
         }
     }
 
@@ -149,6 +243,12 @@ struct GoalDetailView: View {
             }) {
                 Label("Archived", systemImage: "archivebox")
             }
+
+            Divider()
+
+            Button(role: .destructive, action: { showDeleteConfirmation = true }) {
+                Label("Delete Goal", systemImage: "trash")
+            }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: statusIcon(goal.status))
@@ -162,6 +262,22 @@ struct GoalDetailView: View {
             .cornerRadius(4)
         }
         .menuStyle(.borderlessButton)
+        .confirmationDialog(
+            "Delete Goal",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                AsyncTask {
+                    if await viewModel.delete() {
+                        appState.selectedGoalId = nil
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to delete \"\(goal.title)\"? This action cannot be undone.")
+        }
     }
 
     private func statusIcon(_ status: GoalStatus) -> String {
@@ -275,39 +391,94 @@ struct GoalDetailView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .popover(isPresented: $isAddingQuarterlyGoal) {
+                    addQuarterlyGoalPopover
+                }
             }
 
             if viewModel.childGoals.isEmpty {
-                Text("No quarterly goals linked to this yearly goal")
+                Text("No quarterly goals linked yet")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
-            } else {
-                ForEach(viewModel.childGoals) { childGoal in
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Q\(childGoal.quarter ?? 0)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text(childGoal.title)
-                                .font(.subheadline)
-                        }
-
-                        Spacer()
-
-                        Text("\(Int(childGoal.progress * 100))%")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        ProgressView(value: childGoal.progress)
-                            .frame(width: 60)
-                    }
-                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 12)
                     .background(Color(nsColor: .controlBackgroundColor))
                     .cornerRadius(8)
+            } else {
+                ForEach(viewModel.childGoals) { childGoal in
+                    Button(action: { appState.selectedGoalId = childGoal.id }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Q\(childGoal.quarter ?? 0)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text(childGoal.title)
+                                    .font(.subheadline)
+                                    .foregroundColor(.primary)
+                            }
+
+                            Spacer()
+
+                            Text("\(Int(childGoal.progress * 100))%")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            ProgressView(value: childGoal.progress)
+                                .frame(width: 60)
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(12)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    private var addQuarterlyGoalPopover: some View {
+        VStack(spacing: 12) {
+            Text("New Quarterly Goal")
+                .font(.headline)
+
+            TextField("Goal title", text: $newQuarterlyGoalTitle)
+                .textFieldStyle(.roundedBorder)
+
+            if let goal = viewModel.goal {
+                Picker("Quarter", selection: $selectedQuarter) {
+                    ForEach(1...4, id: \.self) { q in
+                        Text("Q\(q) \(goal.year)").tag(q)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            HStack {
+                Button("Cancel") {
+                    isAddingQuarterlyGoal = false
+                    newQuarterlyGoalTitle = ""
+                }
+
+                Spacer()
+
+                Button("Add") {
+                    AsyncTask {
+                        await viewModel.addQuarterlyGoal(title: newQuarterlyGoalTitle, quarter: selectedQuarter)
+                        newQuarterlyGoalTitle = ""
+                        isAddingQuarterlyGoal = false
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(newQuarterlyGoalTitle.isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 300)
     }
 
     // MARK: - Initiatives Section
@@ -333,13 +504,23 @@ struct GoalDetailView: View {
             }
 
             if viewModel.initiatives.isEmpty {
-                Text("No initiatives yet. Initiatives are major efforts that help achieve this goal.")
+                Text("No initiatives yet. Add major efforts that help achieve this goal.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 12)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .cornerRadius(8)
             } else {
                 ForEach(viewModel.initiatives) { initiative in
-                    InitiativeRow(initiative: initiative)
+                    Button(action: {
+                        appState.selectedGoalId = nil
+                        appState.selectedInitiativeId = initiative.id
+                    }) {
+                        InitiativeRow(initiative: initiative)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -381,6 +562,7 @@ struct GoalDetailView: View {
 
 struct InitiativeRow: View {
     let initiative: Initiative
+    @State private var isHovered = false
 
     var body: some View {
         HStack {
@@ -396,7 +578,7 @@ struct InitiativeRow: View {
                     if let targetDate = initiative.targetDate {
                         Label(targetDate.formatted(.dateTime.month().day()), systemImage: "calendar")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(targetDate < Date() && initiative.status == .active ? .red : .secondary)
                     }
                 }
             }
@@ -404,11 +586,18 @@ struct InitiativeRow: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
+                .foregroundColor(isHovered ? .accentColor : .secondary)
         }
         .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(isHovered ? Color.accentColor.opacity(0.05) : Color(nsColor: .controlBackgroundColor))
         .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isHovered ? Color.accentColor.opacity(0.2) : Color.clear, lineWidth: 1)
+        )
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 
     private var statusIcon: String {

@@ -9,7 +9,11 @@ struct ForgeApp: App {
         // Setup database before any views are created
         do {
             try AppDatabase.shared.setup()
+            #if DEBUG
+            try AppDatabase.shared.seedSampleData()
+            #endif
         } catch {
+            print("❌ Database error: \(error)")
             fatalError("Database setup failed: \(error)")
         }
     }
@@ -19,6 +23,8 @@ struct ForgeApp: App {
             MainNavigationView()
                 .environmentObject(appState)
                 .frame(minWidth: 900, minHeight: 600)
+                .background(AppTheme.windowBackground)
+                .tint(AppTheme.accent)
         }
         .windowStyle(.hiddenTitleBar)
         .commands {
