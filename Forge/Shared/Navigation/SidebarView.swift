@@ -4,6 +4,7 @@ private typealias AsyncTask = _Concurrency.Task
 
 struct SidebarView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.colorScheme) private var colorScheme
     @StateObject private var perspectiveViewModel = PerspectiveListViewModel()
     @StateObject private var projectViewModel = ProjectListViewModel()
     @State private var isAddingPerspective = false
@@ -25,8 +26,12 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .listSectionSeparator(.hidden)
         .scrollContentBackground(.hidden)
-        .background(AppTheme.sidebarBackground)
-        .listRowBackground(AppTheme.sidebarRowBackground)
+        .background(.ultraThinMaterial)
+        .overlay(alignment: .trailing) {
+            Rectangle()
+                .fill(AppTheme.sidebarDivider.opacity(0.6))
+                .frame(width: 1)
+        }
         .frame(minWidth: 230)
         .sheet(isPresented: $isAddingPerspective) {
             PerspectiveEditorSheet()
@@ -105,14 +110,10 @@ struct SidebarView: View {
 
             Button(action: { isAddingProject = true }) {
                 Label("Add Project", systemImage: "plus")
-                    .font(.caption.weight(.semibold))
-                    .foregroundColor(AppTheme.accentShadow)
-                    .padding(.horizontal, 10)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundColor(AppTheme.accent)
+                    .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(AppTheme.sidebarHeaderBackground.opacity(0.8))
-                    )
             }
             .buttonStyle(.plain)
         } header: {
@@ -138,7 +139,7 @@ struct SidebarView: View {
                     .foregroundColor(AppTheme.textSecondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(AppTheme.sidebarHeaderBackground.opacity(0.6))
+                    .background(AppTheme.sidebarHeaderBackground.opacity(colorScheme == .dark ? 0.3 : 0.7))
                     .cornerRadius(4)
             }
         }
@@ -231,37 +232,31 @@ struct SidebarView: View {
         }
     }
 
+    private var rowBackground: some View {
+        Color.clear
+    }
+
     private struct SidebarSectionHeader: View {
         let title: String
 
         var body: some View {
             Text(title.uppercased())
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .kerning(0.8)
+                .kerning(0.6)
                 .foregroundColor(AppTheme.sidebarHeaderText)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(AppTheme.sidebarHeaderBackground)
-                )
-                .padding(.horizontal, 4)
-                .padding(.top, 8)
+                .padding(.top, 12)
         }
     }
 
     private var addCustomViewButton: some View {
         Button(action: { isAddingPerspective = true }) {
             Label("Add Custom View", systemImage: "plus")
-                .font(.caption.weight(.semibold))
-                .foregroundColor(AppTheme.accentShadow)
-                .padding(.horizontal, 10)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundColor(AppTheme.accent)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(AppTheme.sidebarHeaderBackground.opacity(0.8))
-                )
         }
         .buttonStyle(.plain)
     }

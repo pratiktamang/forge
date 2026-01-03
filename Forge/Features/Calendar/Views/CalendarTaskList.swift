@@ -24,11 +24,12 @@ struct CalendarTaskList: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
-            .background(AppTheme.selectionBackground)
-
-            Rectangle()
-                .fill(AppTheme.cardBorder)
-                .frame(height: 1)
+            .background(.ultraThinMaterial)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(AppTheme.cardBorder.opacity(0.8))
+                    .frame(height: 1)
+            }
 
             if viewModel.tasksForSelectedDate.isEmpty && !isAddingTask {
                 emptyState
@@ -89,7 +90,7 @@ struct CalendarTaskList: View {
         .frame(maxWidth: 320)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(AppTheme.cardBackground)
+                .fill(.regularMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(AppTheme.emptyStateBorder, lineWidth: 1)
@@ -140,7 +141,7 @@ struct CalendarTaskList: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(AppTheme.quickAddBackground)
+        .background(.thinMaterial)
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(AppTheme.quickAddBorder)

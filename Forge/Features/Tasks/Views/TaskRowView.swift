@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TaskRowView: View {
+    @Environment(\.colorScheme) private var colorScheme
     let task: Task
     var isSelected: Bool = false
     let onToggleComplete: () -> Void
@@ -259,12 +260,13 @@ struct TaskRowView: View {
     }
 
     private var rowBackground: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
             .fill(backgroundColor)
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(borderColor, lineWidth: isSelected ? 1.5 : 1)
             )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.45 : 0.08), radius: 12, y: 6)
     }
 
     private var backgroundColor: Color {

@@ -76,6 +76,7 @@ final class TaskViewModel: ObservableObject {
     // MARK: - Observation
 
     func startObserving() {
+        isLoading = true
         switch filter {
         case .inbox:
             startObserving(repository.observeInbox())

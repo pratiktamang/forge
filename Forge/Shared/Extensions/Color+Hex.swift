@@ -73,35 +73,35 @@ extension NSColor {
     }
 }
 
-/// Shared palette inspired by the reference mail client's warm, papery UI.
+/// Shared palette for a minimal, glass-inspired interface.
 enum AppTheme {
-    static let accent = color(light: "DA7560", dark: "F29D89")
-    static let accentShadow = color(light: "C16754", dark: "E27F68")
+    static let accent = color(light: "2F9C95", dark: "5ED5CD")
+    static let accentShadow = color(light: "1E6D68", dark: "44AFAA")
 
-    static let windowBackground = color(light: "F6F1EB", dark: "1E1A18")
-    static let sidebarBackground = color(light: "F1E8DF", dark: "191513")
-    static let sidebarHeaderBackground = color(light: "FFE1CB", dark: "3B2C24")
-    static let sidebarHeaderText = color(light: "9B6E53", dark: "F3D7C1")
-    static let sidebarRowBackground = color(light: "FBF8F3", dark: "221B19")
-    static let sidebarDivider = color(light: "E7D9CD", dark: "372C27")
+    static let windowBackground = color(light: "F5F5F7", dark: "0F1115")
+    static let sidebarBackground = color(light: "F8F9FB", dark: "17191D")
+    static let sidebarHeaderBackground = color(light: "E6E8EF", dark: "1F2228")
+    static let sidebarHeaderText = color(light: "5B6170", dark: "C6CCD9")
+    static let sidebarRowBackground = color(light: "FFFFFF", dark: "1C1F24")
+    static let sidebarDivider = color(light: "E3E6ED", dark: "272A32")
 
-    static let contentBackground = color(light: "FCFAF6", dark: "1D1917")
-    static let cardBackground = color(light: "FFFFFF", dark: "2A221F")
-    static let cardBorder = color(light: "E6DBD0", dark: "3B2F2A")
-    static let selectionBackground = color(light: "EFE0D5", dark: "3A2A25")
-    static let selectionBorder = color(light: "D8C0B1", dark: "4B3730")
+    static let contentBackground = color(light: "FBFCFF", dark: "121418")
+    static let cardBackground = color(light: "FFFFFF", dark: "1B1E23")
+    static let cardBorder = color(light: "E2E6EE", dark: "262A31")
+    static let selectionBackground = color(light: "E8F6F4", dark: "1F2A2A")
+    static let selectionBorder = color(light: "B8E5E0", dark: "365656")
 
-    static let metadataText = color(light: "9D9086", dark: "BAAAA0")
-    static let pillPurple = color(light: "7443D8", dark: "A58CFF")
-    static let dateStampBackground = color(light: "E3E0FB", dark: "3C3360")
+    static let metadataText = color(light: "808592", dark: "9BA2B2")
+    static let pillPurple = color(light: "4C5C68", dark: "7A8896")
+    static let dateStampBackground = color(light: "E2F4F1", dark: "233443")
 
-    static let quickAddBackground = color(light: "F0E6DA", dark: "2A221C")
-    static let quickAddBorder = color(light: "E1D4C7", dark: "40342D")
+    static let quickAddBackground = color(light: "F4F5F8", dark: "1B1E22")
+    static let quickAddBorder = color(light: "E3E6ED", dark: "262A31")
 
-    static let emptyStateBorder = color(light: "E8DCD0", dark: "3B2F28")
+    static let emptyStateBorder = color(light: "E3E6ED", dark: "282C34")
 
-    static let textPrimary = color(light: "372C24", dark: "F6ECE2")
-    static let textSecondary = color(light: "8A7D73", dark: "CFBEAF")
+    static let textPrimary = color(light: "1D1F24", dark: "F5F6FB")
+    static let textSecondary = color(light: "676B75", dark: "B6BBC7")
 
     private static func color(light: String, dark: String) -> Color {
         Color.adaptive(lightHex: light, darkHex: dark)

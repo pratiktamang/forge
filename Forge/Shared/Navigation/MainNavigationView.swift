@@ -13,7 +13,12 @@ struct MainNavigationView: View {
         } content: {
             ContentListView()
         } detail: {
-            DetailView()
+            if appState.isInBoardMode {
+                // Empty view when board is shown - board takes full content width
+                Color.clear
+            } else {
+                DetailView()
+            }
         }
         .navigationSplitViewStyle(.balanced)
         .background(AppTheme.windowBackground)
@@ -22,6 +27,11 @@ struct MainNavigationView: View {
         }
         .sheet(isPresented: $appState.showQuickCapture) {
             QuickCaptureView()
+        }
+        .onChange(of: appState.isInBoardMode) { _, isBoard in
+            withAnimation {
+                columnVisibility = isBoard ? .doubleColumn : .all
+            }
         }
     }
 }
@@ -73,6 +83,7 @@ struct ContentListView: View {
                 appState.selectedGoalId = nil
                 appState.selectedInitiativeId = nil
                 appState.selectedHabitId = nil
+                appState.isInBoardMode = false
             }
         }
     }
@@ -82,6 +93,7 @@ struct ContentListView: View {
 
 struct ProjectContentView: View {
     let projectId: String
+    @EnvironmentObject var appState: AppState
     @State private var viewMode: ViewMode = .list
     @State private var project: Project?
     @State private var taskCount: Int = 0
@@ -131,6 +143,12 @@ struct ProjectContentView: View {
             if !isEditing {
                 AsyncTask { await loadProject() }
             }
+        }
+        .onChange(of: viewMode) { _, mode in
+            appState.isInBoardMode = (mode == .board)
+        }
+        .onDisappear {
+            appState.isInBoardMode = false
         }
     }
 
@@ -316,7 +334,7 @@ struct EmptyDetailView: View {
         .padding(32)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(AppTheme.cardBackground)
+                .fill(.regularMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(AppTheme.cardBorder, lineWidth: 1)

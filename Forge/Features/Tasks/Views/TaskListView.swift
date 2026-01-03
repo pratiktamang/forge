@@ -134,7 +134,7 @@ struct TaskListView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(AppTheme.quickAddBackground)
+        .background(.thinMaterial)
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(AppTheme.quickAddBorder)
@@ -176,7 +176,7 @@ struct TaskListView: View {
         .frame(maxWidth: 360)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(AppTheme.cardBackground)
+                .fill(.regularMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(AppTheme.emptyStateBorder, lineWidth: 1)

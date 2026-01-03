@@ -19,6 +19,7 @@ final class AppState: ObservableObject {
     @Published var showQuickCapture = false
     @Published var searchQuery = ""
     @Published var isVimModeEnabled = true
+    @Published var isInBoardMode = false
 
     // MARK: - Data
 
