@@ -83,40 +83,56 @@ struct MainNavigationView: View {
 struct ContentListView: View {
     @EnvironmentObject var appState: AppState
 
-    var body: some View {
-        Group {
-            switch appState.selectedSection {
-            case .inbox:
-                TaskListView(filter: .inbox)
-            case .today:
-                TaskListView(filter: .today)
-            case .upcoming:
-                TaskListView(filter: .upcoming)
-            case .flagged:
-                TaskListView(filter: .flagged)
-            case .calendar:
-                CalendarView()
-            case .dashboard:
-                DashboardView()
-            case .perspective(let perspectiveId):
-                PerspectiveTaskListView(perspectiveId: perspectiveId)
-            case .project(let projectId):
-                ProjectContentView(projectId: projectId)
-            case .goals:
-                GoalListView()
-            case .notes:
-                NoteListView()
-            case .dailyNote:
-                DailyNoteView()
-            case .habits:
-                HabitListView()
-            case .activity:
-                ActivityDashboardView()
-            case .weeklyReview:
-                WeeklyReviewView()
-            }
+    // Sections that have their own header (skip adding SectionHeaderView)
+    private var sectionHasOwnHeader: Bool {
+        switch appState.selectedSection {
+        case .project, .goals, .dashboard, .calendar, .activity, .weeklyReview:
+            return true
+        default:
+            return false
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if !sectionHasOwnHeader {
+                SectionHeaderView(section: appState.selectedSection)
+            }
+
+            Group {
+                switch appState.selectedSection {
+                case .inbox:
+                    TaskListView(filter: .inbox)
+                case .today:
+                    TaskListView(filter: .today)
+                case .upcoming:
+                    TaskListView(filter: .upcoming)
+                case .flagged:
+                    TaskListView(filter: .flagged)
+                case .calendar:
+                    CalendarView()
+                case .dashboard:
+                    DashboardView()
+                case .perspective(let perspectiveId):
+                    PerspectiveTaskListView(perspectiveId: perspectiveId)
+                case .project(let projectId):
+                    ProjectContentView(projectId: projectId)
+                case .goals:
+                    GoalListView()
+                case .notes:
+                    NoteListView()
+                case .dailyNote:
+                    DailyNoteView()
+                case .habits:
+                    HabitListView()
+                case .activity:
+                    ActivityDashboardView()
+                case .weeklyReview:
+                    WeeklyReviewView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
         .animation(.easeInOut(duration: 0.2), value: appState.selectedSection)
         .onChange(of: appState.selectedSection) { _, _ in
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -128,6 +144,40 @@ struct ContentListView: View {
                 appState.selectedHabitId = nil
                 appState.isInBoardMode = false
             }
+        }
+    }
+}
+
+// MARK: - Section Header View
+
+struct SectionHeaderView: View {
+    let section: SidebarSection
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                // Section icon
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.accent.opacity(0.15))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: section.icon)
+                        .font(.title3)
+                        .foregroundColor(AppTheme.accent)
+                }
+
+                // Title
+                Text(section.title)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(AppTheme.textPrimary)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+
+            Divider()
         }
     }
 }

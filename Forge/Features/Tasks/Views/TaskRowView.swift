@@ -24,7 +24,7 @@ struct TaskRowView: View {
     @State private var isHovering = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14 * textScale) {
+        HStack(alignment: .center, spacing: 14 * textScale) {
             // Checkbox
             Button(action: onToggleComplete) {
                 Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
