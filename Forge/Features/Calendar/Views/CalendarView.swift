@@ -7,7 +7,7 @@ struct CalendarView: View {
     @EnvironmentObject var appState: AppState
 
     private let calendar = Calendar.current
-    private let badgeWidth: CGFloat = 96
+    private let badgeWidth: CGFloat = 92
 
     var body: some View {
         ScrollViewReader { _ in
@@ -290,6 +290,8 @@ private struct TimelineDayCard: View {
 
     @State private var newTaskTitle = ""
     @FocusState private var isAddingTask: Bool
+    @State private var isQuickAddVisible = false
+    @State private var isHoveringCard = false
 
     private let calendar = Calendar.current
 
@@ -310,7 +312,7 @@ private struct TimelineDayCard: View {
 
                 tasksSection
 
-                quickAddBar
+                quickAddControl
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -334,6 +336,11 @@ private struct TimelineDayCard: View {
                             )
                     )
             )
+        }
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHoveringCard = hovering
+            }
         }
     }
 
@@ -382,13 +389,41 @@ private struct TimelineDayCard: View {
 
     private var taskEmptyState: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("No plans yet.")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+            Text("No tasks scheduled.")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundColor(AppTheme.textSecondary)
 
-            Text("Drop intentions for \(dayString).")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+            Text("Stay flexible or add something when you’re ready.")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundColor(AppTheme.metadataText)
+        }
+    }
+
+    @ViewBuilder
+    private var quickAddControl: some View {
+        if isQuickAddVisible || !newTaskTitle.isEmpty {
+            quickAddBar
+        } else if isHoveringCard || tasks.isEmpty {
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    isQuickAddVisible = true
+                    isAddingTask = true
+                }
+            } label: {
+                Label("Add task", systemImage: "plus")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(AppTheme.cardBackground.opacity(0.7))
+                    )
+                    .overlay(
+                        Capsule(style: .continuous)
+                            .stroke(AppTheme.cardBorder.opacity(0.7), lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -418,6 +453,18 @@ private struct TimelineDayCard: View {
                         .foregroundColor(.white)
                 }
                 .buttonStyle(.plain)
+            } else {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isQuickAddVisible = false
+                        isAddingTask = false
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(AppTheme.metadataText)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.vertical, 10)
@@ -433,7 +480,10 @@ private struct TimelineDayCard: View {
         guard !trimmed.isEmpty else { return }
         onCreateTask(trimmed)
         newTaskTitle = ""
-        isAddingTask = false
+        withAnimation(.easeInOut(duration: 0.2)) {
+            isAddingTask = false
+            isQuickAddVisible = false
+        }
     }
 
     private var dayString: String {
@@ -548,9 +598,13 @@ private struct SectionLabel: View {
     let systemImage: String
 
     var body: some View {
-        Label(title, systemImage: systemImage)
-            .font(.system(size: 12, weight: .semibold, design: .rounded))
-            .foregroundColor(AppTheme.textSecondary)
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.system(size: 11, weight: .semibold))
+            Text(title)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+        }
+        .foregroundColor(AppTheme.textSecondary)
     }
 }
 
@@ -558,11 +612,12 @@ private struct EventRow: View {
     let event: CalendarEvent
 
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(event.timeRangeString)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundColor(AppTheme.metadataText)
+
                 Text(event.durationDescription)
                     .font(.system(size: 10, weight: .medium, design: .rounded))
                     .foregroundColor(AppTheme.metadataText.opacity(0.8))
@@ -570,12 +625,12 @@ private struct EventRow: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(event.title)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundColor(AppTheme.textPrimary)
 
-                HStack(spacing: 8) {
-                    Capsule()
-                        .fill(color(for: event.calendarType).opacity(0.15))
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(color(for: event.calendarType))
                         .frame(width: 6, height: 6)
 
                     Text(event.calendarType.displayName)
@@ -586,8 +641,9 @@ private struct EventRow: View {
                         Text("•")
                             .foregroundColor(AppTheme.metadataText)
                         Text(location)
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .font(.system(size: 10.5, weight: .medium, design: .rounded))
                             .foregroundColor(AppTheme.metadataText)
+                            .lineLimit(1)
                     }
                 }
             }
