@@ -96,14 +96,17 @@ struct TaskRowView: View {
             Text(task.title)
                 .font(.system(size: titleFontSize, weight: .medium, design: .rounded))
                 .foregroundColor(task.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
+                .strikethrough(task.status == .completed && hasSubtasks, color: AppTheme.metadataText)
                 .lineLimit(2)
                 .overlay(alignment: .leading) {
                     // Connected strikethrough line from dash through title
-                    AnimatedStrikethrough(
-                        isActive: task.status == .completed && !isCheckboxHovering,
-                        leadingPadding: -(12 * textScale + iconWidth * textScale / 2),
-                        trailingPadding: -(titleFontSize * 0.6)
-                    )
+                    if !hasSubtasks {
+                        AnimatedStrikethrough(
+                            isActive: task.status == .completed && !isCheckboxHovering,
+                            leadingPadding: -(12 * textScale + iconWidth * textScale / 2),
+                            trailingPadding: -(titleFontSize * 0.6)
+                        )
+                    }
                 }
 
             Spacer()

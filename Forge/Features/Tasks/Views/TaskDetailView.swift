@@ -4,6 +4,7 @@ import SwiftUI
 private typealias AsyncTask = _Concurrency.Task
 
 struct TaskDetailView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel: TaskDetailViewModel
     @State private var newSubtaskTitle = ""
     @State private var isDuePickerPresented = false
@@ -311,6 +312,13 @@ struct TaskDetailView: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
 
+            let backgroundColor = colorScheme == .dark ?
+                Color.white.opacity(0.02) :
+                Color.black.opacity(0.02)
+            let strokeColor = colorScheme == .dark ?
+                Color.white.opacity(0.06) :
+                Color.black.opacity(0.08)
+
             let notesBinding = Binding(
                 get: { viewModel.task?.notes ?? "" },
                 set: { viewModel.task?.notes = $0.isEmpty ? nil : $0 }
@@ -321,23 +329,32 @@ struct TaskDetailView: View {
                     Text("Write notes…")
                         .font(.body)
                         .foregroundColor(.secondary.opacity(0.6))
-                        .padding(.top, 14)
-                        .padding(.leading, 14)
+                        .padding(.top, 18)
+                        .padding(.leading, 20)
                 }
 
                 TextEditor(text: notesBinding)
                     .font(.body)
-                    .padding(12)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 18)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
                     .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(nsColor: .controlBackgroundColor).opacity(0.45))
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(backgroundColor)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(strokeColor, lineWidth: 1)
+                                    .blur(radius: 0.5)
+                                    .opacity(0.9)
+                            )
                     )
                     .focused($isNotesFocused)
                     .onChange(of: isNotesFocused) { _, focused in
                         if !focused {
                             AsyncTask { await viewModel.save() }
                         }
-                    }
+                }
             }
             .frame(minHeight: 220)
         }

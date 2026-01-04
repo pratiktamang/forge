@@ -327,9 +327,20 @@ final class TaskDetailViewModel: ObservableObject {
             )
             .store(in: &cancellables)
 
-        // Fetch subtasks, projects, and tags
+        // Observe subtasks
+        repository.observeSubtasks(parentId: taskId)
+            .publisher(in: AppDatabase.shared.dbQueue, scheduling: .immediate)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { [weak self] tasks in
+                    self?.subtasks = tasks
+                }
+            )
+            .store(in: &cancellables)
+
+        // Fetch projects and tags
         AsyncTask {
-            await fetchSubtasks()
             await fetchProjects()
             await fetchTags()
         }
@@ -387,7 +398,6 @@ final class TaskDetailViewModel: ObservableObject {
 
         do {
             try await repository.save(subtask)
-            await fetchSubtasks()
         } catch {
             self.error = error
         }
@@ -399,13 +409,11 @@ final class TaskDetailViewModel: ObservableObject {
         } else {
             try? await repository.completeTask(subtask)
         }
-        await fetchSubtasks()
     }
 
     func deleteSubtask(_ subtask: Task) async {
         do {
             try await repository.delete(subtask)
-            await fetchSubtasks()
         } catch {
             self.error = error
         }
@@ -440,11 +448,4 @@ final class TaskDetailViewModel: ObservableObject {
         }
     }
 
-    private func fetchSubtasks() async {
-        do {
-            subtasks = try await repository.fetchSubtasks(parentId: taskId)
-        } catch {
-            self.error = error
-        }
-    }
 }
