@@ -7,11 +7,15 @@ struct TaskRowView: View {
     enum Style {
         case standard
         case minimal
+        case subtask  // For inline subtasks
     }
 
     let task: Task
     var isSelected: Bool = false
     var style: Style = .standard
+    var subtaskInfo: (total: Int, completed: Int)? = nil
+    var isExpanded: Bool = false
+    var onToggleExpand: (() -> Void)? = nil
     let onToggleComplete: () -> Void
     let onToggleFlag: () -> Void
     var onSetStatus: ((TaskStatus) -> Void)? = nil
@@ -22,51 +26,74 @@ struct TaskRowView: View {
     var canMoveDown: Bool = false
 
     @State private var isHovering = false
+    @State private var isCheckboxHovering = false
+
+    private var hasSubtasks: Bool {
+        if let info = subtaskInfo { return info.total > 0 }
+        return false
+    }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 14 * textScale) {
-            // Checkbox
-            Button(action: onToggleComplete) {
-                HStack(spacing: 0) {
-                    Text("[")
-                        .font(.system(size: 18 * textScale, weight: .light, design: .monospaced))
-                    Text(task.status == .completed ? "✓" : " ")
-                        .font(.system(size: 14 * textScale, weight: .medium, design: .serif))
-                        .italic()
-                        .frame(width: 10 * textScale)
-                    Text("]")
-                        .font(.system(size: 18 * textScale, weight: .light, design: .monospaced))
+        HStack(alignment: .center, spacing: 12 * textScale) {
+            // Leading element: chevron for parent tasks, checkbox for others
+            let iconWidth = style == .subtask ? 20.0 : 24.0
+            let titleFontSize = (style == .subtask ? 14.0 : 16.0) * textScale
+
+            if hasSubtasks {
+                // Chevron for expandable tasks
+                Button(action: { onToggleExpand?() }) {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 12 * textScale, weight: .medium))
+                        .foregroundColor(AppTheme.metadataText.opacity(0.6))
                 }
-                .foregroundColor(task.status == .completed ? AppTheme.accent : AppTheme.metadataText.opacity(0.5))
-            }
-            .buttonStyle(.plain)
-
-            // Content
-            VStack(alignment: .leading, spacing: 6 * textScale) {
-                // Title
-                Text(task.title)
-                    .font(.system(size: 16 * textScale, weight: .medium, design: .rounded))
-                    .strikethrough(task.status == .completed)
-                    .foregroundColor(task.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
-                    .lineLimit(2)
-
-                // Notes indicator
-                if hasMetadata && shouldShowMetadata {
-                    Image(systemName: "doc.text")
-                        .font(.system(size: 13 * textScale))
-                        .foregroundColor(AppTheme.metadataText)
+                .buttonStyle(.plain)
+                .frame(width: iconWidth * textScale)
+            } else {
+                // Checkbox for leaf tasks
+                Button(action: onToggleComplete) {
+                    checkbox
+                }
+                .buttonStyle(.plain)
+                .frame(width: iconWidth * textScale)
+                .onHover { hovering in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isCheckboxHovering = hovering
+                    }
                 }
             }
+
+            // Title
+            Text(task.title)
+                .font(.system(size: titleFontSize, weight: .medium, design: .rounded))
+                .foregroundColor(task.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
+                .lineLimit(2)
+                .overlay(alignment: .leading) {
+                    // Connected strikethrough line from dash through title
+                    if task.status == .completed && !isCheckboxHovering {
+                        Rectangle()
+                            .fill(AppTheme.metadataText)
+                            .frame(height: 2)
+                            .padding(.leading, -(12 * textScale + iconWidth * textScale / 2))
+                            .padding(.trailing, -(titleFontSize * 0.6))
+                    }
+                }
 
             Spacer()
 
-            // Status badge
-            if task.status != .inbox && task.status != .completed && task.status != .next {
+            // Subtask count for parent tasks
+            if let info = subtaskInfo, info.total > 0 {
+                Text("\(info.completed)/\(info.total)")
+                    .font(.system(size: 12 * textScale, weight: .medium, design: .rounded))
+                    .foregroundColor(info.completed == info.total ? AppTheme.accent : AppTheme.metadataText)
+            }
+
+            // Status badge (hide for subtask style)
+            if style != .subtask && task.status != .inbox && task.status != .completed && task.status != .next {
                 statusBadge
             }
         }
-        .padding(.vertical, 14 * textScale)
-        .padding(.horizontal, 16 * textScale)
+        .padding(.vertical, style == .subtask ? 8 : 14 * textScale)
+        .padding(.horizontal, style == .subtask ? 8 : 16 * textScale)
         .background(rowBackground)
         .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .onHover { hovering in
@@ -79,22 +106,49 @@ struct TaskRowView: View {
         }
     }
 
-    // MARK: - Computed Properties
+    // MARK: - Subviews
 
-    private var hasMetadata: Bool {
-        task.notes != nil && !task.notes!.isEmpty
-    }
+    @ViewBuilder
+    private var checkbox: some View {
+        let size = style == .subtask ? 14.0 : 16.0
+        let iconWidth = style == .subtask ? 20.0 : 24.0
 
-    private var shouldShowMetadata: Bool {
-        switch style {
-        case .standard:
-            return true
-        case .minimal:
-            return isSelected || isHovering
+        if isCheckboxHovering {
+            if task.status == .completed {
+                // Show undo arrow on hover for completed tasks
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.system(size: (size - 3) * textScale, weight: .medium))
+                    .foregroundColor(AppTheme.metadataText)
+                    .frame(width: 20 * textScale, height: 20 * textScale)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .stroke(AppTheme.metadataText.opacity(0.3), lineWidth: 1)
+                    )
+            } else {
+                // Show checkmark on hover (clickable)
+                Image(systemName: "checkmark")
+                    .font(.system(size: (size - 2) * textScale, weight: .semibold))
+                    .foregroundColor(AppTheme.accent)
+                    .frame(width: 20 * textScale, height: 20 * textScale)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .stroke(AppTheme.accent.opacity(0.5), lineWidth: 1)
+                    )
+            }
+        } else {
+            // Show dash (struck through when completed)
+            Text("-")
+                .font(.system(size: size * textScale, weight: .regular, design: .monospaced))
+                .foregroundColor(task.status == .completed ? .clear : AppTheme.metadataText.opacity(0.6))
+                .overlay {
+                    if task.status == .completed {
+                        Rectangle()
+                            .fill(AppTheme.metadataText)
+                            .frame(width: iconWidth * textScale, height: 2)
+                    }
+                }
         }
     }
-
-    // MARK: - Subviews
 
     private var statusBadge: some View {
         Text(task.status.displayName)

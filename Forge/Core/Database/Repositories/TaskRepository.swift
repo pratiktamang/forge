@@ -142,19 +142,31 @@ final class TaskRepository {
     // MARK: - Batch Operations
 
     func completeTask(_ task: Task) async throws {
-        var updated = task
-        updated.status = .completed
-        updated.completedAt = Date()
-        updated.updatedAt = Date()
-        try await save(updated)
+        try await database.dbQueue.write { db in
+            var updated = task
+            updated.status = .completed
+            updated.completedAt = Date()
+            updated.updatedAt = Date()
+            try updated.save(db)
+
+            if let parentId = task.parentTaskId {
+                try markParentCompletedIfNeeded(parentId: parentId, db: db)
+            }
+        }
     }
 
     func uncompleteTask(_ task: Task) async throws {
-        var updated = task
-        updated.status = .next
-        updated.completedAt = nil
-        updated.updatedAt = Date()
-        try await save(updated)
+        try await database.dbQueue.write { db in
+            var updated = task
+            updated.status = .next
+            updated.completedAt = nil
+            updated.updatedAt = Date()
+            try updated.save(db)
+
+            if let parentId = task.parentTaskId {
+                try markParentIncomplete(parentId: parentId, db: db)
+            }
+        }
     }
 
     func moveToColumn(_ task: Task, columnId: String?) async throws {
@@ -185,6 +197,43 @@ final class TaskRepository {
         }
     }
 
+    // MARK: - Helpers
+
+    private func markParentCompletedIfNeeded(parentId: String, db: Database) throws {
+        let incompleteCount = try Task
+            .filter(Column("parentTaskId") == parentId)
+            .filter(Column("status") != TaskStatus.completed.rawValue)
+            .fetchCount(db)
+
+        guard incompleteCount == 0 else { return }
+        guard var parent = try Task.fetchOne(db, id: parentId) else { return }
+
+        if parent.status != .completed {
+            parent.status = .completed
+            parent.completedAt = Date()
+            parent.updatedAt = Date()
+            try parent.save(db)
+        }
+
+        if let ancestorId = parent.parentTaskId {
+            try markParentCompletedIfNeeded(parentId: ancestorId, db: db)
+        }
+    }
+
+    private func markParentIncomplete(parentId: String, db: Database) throws {
+        guard var parent = try Task.fetchOne(db, id: parentId) else { return }
+        guard parent.status == .completed else { return }
+
+        parent.status = .next
+        parent.completedAt = nil
+        parent.updatedAt = Date()
+        try parent.save(db)
+
+        if let ancestorId = parent.parentTaskId {
+            try markParentIncomplete(parentId: ancestorId, db: db)
+        }
+    }
+
     // MARK: - Observation (Reactive)
 
     func observeInbox() -> ValueObservation<ValueReducers.Fetch<[Task]>> {
@@ -192,6 +241,7 @@ final class TaskRepository {
 
         return ValueObservation.tracking { db in
             try Task
+                .filter(Column("parentTaskId") == nil)  // Exclude subtasks
                 .filter(
                     // Active inbox tasks OR completed today (to show strikethrough)
                     (Column("status") == TaskStatus.inbox.rawValue) ||
@@ -208,6 +258,7 @@ final class TaskRepository {
 
         return ValueObservation.tracking { db in
             try Task
+                .filter(Column("parentTaskId") == nil)  // Exclude subtasks
                 .filter(
                     // Active tasks due today/flagged OR completed today
                     (Column("status") != TaskStatus.completed.rawValue &&
@@ -228,6 +279,7 @@ final class TaskRepository {
 
         return ValueObservation.tracking { db in
             try Task
+                .filter(Column("parentTaskId") == nil)  // Exclude subtasks
                 .filter(Column("dueDate") != nil)
                 .filter(Column("dueDate") >= today)
                 .filter(
@@ -245,6 +297,7 @@ final class TaskRepository {
 
         return ValueObservation.tracking { db in
             try Task
+                .filter(Column("parentTaskId") == nil)  // Exclude subtasks
                 .filter(Column("isFlagged") == true)
                 .filter(
                     // Active tasks OR completed today
@@ -278,6 +331,38 @@ final class TaskRepository {
     func observeTask(id: String) -> ValueObservation<ValueReducers.Fetch<Task?>> {
         ValueObservation.tracking { db in
             try Task.fetchOne(db, id: id)
+        }
+    }
+
+    func observeSubtasks(parentId: String) -> ValueObservation<ValueReducers.Fetch<[Task]>> {
+        ValueObservation.tracking { db in
+            try Task
+                .filter(Column("parentTaskId") == parentId)
+                .order(Column("sortOrder").asc, Column("createdAt").asc)
+                .fetchAll(db)
+        }
+    }
+
+    /// Returns a dictionary of taskId -> (total subtasks, completed subtasks)
+    func observeSubtaskCounts() -> ValueObservation<ValueReducers.Fetch<[String: (total: Int, completed: Int)]>> {
+        ValueObservation.tracking { db in
+            var counts: [String: (total: Int, completed: Int)] = [:]
+            let rows = try Row.fetchAll(db, sql: """
+                SELECT parentTaskId,
+                       COUNT(*) as total,
+                       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+                FROM tasks
+                WHERE parentTaskId IS NOT NULL
+                GROUP BY parentTaskId
+            """)
+            for row in rows {
+                if let parentId: String = row["parentTaskId"] {
+                    let total: Int = row["total"] ?? 0
+                    let completed: Int = row["completed"] ?? 0
+                    counts[parentId] = (total: total, completed: completed)
+                }
+            }
+            return counts
         }
     }
 
