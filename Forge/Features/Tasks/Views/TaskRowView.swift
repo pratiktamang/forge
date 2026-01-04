@@ -1,5 +1,35 @@
 import SwiftUI
 
+struct AnimatedStrikethrough: View {
+    let isActive: Bool
+    var color: Color = AppTheme.metadataText
+    var height: CGFloat = 2
+    var width: CGFloat? = nil
+    var leadingPadding: CGFloat = 0
+    var trailingPadding: CGFloat = 0
+    var animation: Animation = .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2)
+
+    @State private var progress: CGFloat = 0
+
+    var body: some View {
+        Rectangle()
+            .fill(color)
+            .frame(width: width, height: height)
+            .scaleEffect(x: progress, y: 1, anchor: .leading)
+            .padding(.leading, leadingPadding)
+            .padding(.trailing, trailingPadding)
+            .accessibilityHidden(true)
+            .onAppear {
+                progress = isActive ? 1 : 0
+            }
+            .onChange(of: isActive) { _, active in
+                withAnimation(animation) {
+                    progress = active ? 1 : 0
+                }
+            }
+    }
+}
+
 struct TaskRowView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.textScale) private var textScale
@@ -69,13 +99,11 @@ struct TaskRowView: View {
                 .lineLimit(2)
                 .overlay(alignment: .leading) {
                     // Connected strikethrough line from dash through title
-                    if task.status == .completed && !isCheckboxHovering {
-                        Rectangle()
-                            .fill(AppTheme.metadataText)
-                            .frame(height: 2)
-                            .padding(.leading, -(12 * textScale + iconWidth * textScale / 2))
-                            .padding(.trailing, -(titleFontSize * 0.6))
-                    }
+                    AnimatedStrikethrough(
+                        isActive: task.status == .completed && !isCheckboxHovering,
+                        leadingPadding: -(12 * textScale + iconWidth * textScale / 2),
+                        trailingPadding: -(titleFontSize * 0.6)
+                    )
                 }
 
             Spacer()
@@ -141,11 +169,10 @@ struct TaskRowView: View {
                 .font(.system(size: size * textScale, weight: .regular, design: .monospaced))
                 .foregroundColor(task.status == .completed ? .clear : AppTheme.metadataText.opacity(0.6))
                 .overlay {
-                    if task.status == .completed {
-                        Rectangle()
-                            .fill(AppTheme.metadataText)
-                            .frame(width: iconWidth * textScale, height: 2)
-                    }
+                    AnimatedStrikethrough(
+                        isActive: task.status == .completed,
+                        width: iconWidth * textScale
+                    )
                 }
         }
     }

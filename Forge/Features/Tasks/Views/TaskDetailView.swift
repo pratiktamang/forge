@@ -426,11 +426,10 @@ struct SubtaskRow: View {
                         .font(.system(size: dashSize * textScale, weight: .regular, design: .monospaced))
                         .foregroundColor(subtask.status == .completed ? .clear : AppTheme.metadataText.opacity(0.6))
                         .overlay {
-                            if subtask.status == .completed {
-                                Rectangle()
-                                    .fill(AppTheme.metadataText)
-                                    .frame(width: iconWidth * textScale, height: 2)
-                            }
+                            AnimatedStrikethrough(
+                                isActive: subtask.status == .completed,
+                                width: iconWidth * textScale
+                            )
                         }
                 }
             }
@@ -447,13 +446,11 @@ struct SubtaskRow: View {
                 .foregroundColor(subtask.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
                 .lineLimit(2)
                 .overlay(alignment: .leading) {
-                    if subtask.status == .completed && !isCheckboxHovering {
-                        Rectangle()
-                            .fill(AppTheme.metadataText)
-                            .frame(height: 2)
-                            .padding(.leading, -(12 * textScale + iconWidth * textScale / 2))
-                            .padding(.trailing, -(titleFontSize * 0.6))
-                    }
+                    AnimatedStrikethrough(
+                        isActive: subtask.status == .completed && !isCheckboxHovering,
+                        leadingPadding: -(12 * textScale + iconWidth * textScale / 2),
+                        trailingPadding: -(titleFontSize * 0.6)
+                    )
                 }
 
             Spacer()
