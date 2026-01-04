@@ -159,6 +159,11 @@ struct CalendarView: View {
                         isToday: calendar.isDateInToday(date),
                         selectedTaskId: appState.selectedTaskId,
                         badgeWidth: badgeWidth,
+                        onOpenDetail: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                appState.selectCalendarDate(date)
+                            }
+                        },
                         onCreateTask: { title in
                             AsyncTask { await viewModel.createTask(title: title, on: date) }
                         },
@@ -170,12 +175,13 @@ struct CalendarView: View {
                         },
                         onSelectTask: { task in
                             withAnimation(.easeInOut(duration: 0.16)) {
+                                appState.selectedCalendarDate = nil
                                 appState.selectedTaskId = task.id
                             }
                         }
-                    )
-                }
+                )
             }
+        }
         }
     }
 
@@ -283,6 +289,7 @@ private struct TimelineDayCard: View {
     let isToday: Bool
     let selectedTaskId: String?
     let badgeWidth: CGFloat
+    let onOpenDetail: () -> Void
     let onCreateTask: (String) -> Void
     let onToggleComplete: (Task) -> Void
     let onToggleFlag: (Task) -> Void
@@ -336,6 +343,24 @@ private struct TimelineDayCard: View {
                             )
                     )
             )
+            .overlay(alignment: .topTrailing) {
+                Button(action: onOpenDetail) {
+                    Image(systemName: "sidebar.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(AppTheme.metadataText)
+                        .padding(8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(AppTheme.cardBackground.opacity(0.8))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(AppTheme.cardBorder.opacity(0.8), lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+                .padding(4)
+            }
         }
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
@@ -356,6 +381,9 @@ private struct TimelineDayCard: View {
                 VStack(spacing: 12) {
                     ForEach(events) { event in
                         EventRow(event: event)
+                            .onTapGesture {
+                                onOpenDetail()
+                            }
                     }
                 }
             }

@@ -42,6 +42,7 @@ final class AppState: ObservableObject {
     @Published var selectedGoalId: String?
     @Published var selectedInitiativeId: String?
     @Published var selectedHabitId: String?
+    @Published var selectedCalendarDate: Date?
 
     // MARK: - UI State
 
@@ -72,6 +73,22 @@ final class AppState: ObservableObject {
     @Published var tags: [Tag] = []
 
     private var cancellables = Set<AnyCancellable>()
+
+    // MARK: - Detail Selection Helpers
+
+    func clearDetailSelection() {
+        selectedTaskId = nil
+        selectedNoteId = nil
+        selectedGoalId = nil
+        selectedInitiativeId = nil
+        selectedHabitId = nil
+        selectedCalendarDate = nil
+    }
+
+    func selectCalendarDate(_ date: Date) {
+        clearDetailSelection()
+        selectedCalendarDate = Calendar.current.startOfDay(for: date)
+    }
 
     init() {
         setupNotificationObservers()

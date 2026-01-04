@@ -23,7 +23,8 @@ struct MainNavigationView: View {
         appState.selectedNoteId != nil ||
         appState.selectedGoalId != nil ||
         appState.selectedInitiativeId != nil ||
-        appState.selectedHabitId != nil
+        appState.selectedHabitId != nil ||
+        appState.selectedCalendarDate != nil
     }
 
     private var isNoteSelected: Bool {
@@ -142,6 +143,7 @@ struct ContentListView: View {
                 appState.selectedGoalId = nil
                 appState.selectedInitiativeId = nil
                 appState.selectedHabitId = nil
+                appState.selectedCalendarDate = nil
                 appState.isInBoardMode = false
             }
         }
@@ -381,27 +383,54 @@ struct DetailView: View {
     @EnvironmentObject var appState: AppState
 
     var body: some View {
-        Group {
-            if let taskId = appState.selectedTaskId {
-                TaskDetailView(taskId: taskId)
-                    .id(taskId)
-            } else if let noteId = appState.selectedNoteId {
-                NoteEditorView(noteId: noteId)
-            } else if let goalId = appState.selectedGoalId {
-                GoalDetailView(goalId: goalId)
-            } else if let initiativeId = appState.selectedInitiativeId {
-                InitiativeDetailView(initiativeId: initiativeId)
-            } else if let habitId = appState.selectedHabitId {
-                HabitDetailView(habitId: habitId)
-            } else {
-                EmptyDetailView()
+        ZStack(alignment: .topTrailing) {
+            Group {
+                if let taskId = appState.selectedTaskId {
+                    TaskDetailView(taskId: taskId)
+                        .id(taskId)
+                } else if let noteId = appState.selectedNoteId {
+                    NoteEditorView(noteId: noteId)
+                } else if let goalId = appState.selectedGoalId {
+                    GoalDetailView(goalId: goalId)
+                } else if let initiativeId = appState.selectedInitiativeId {
+                    InitiativeDetailView(initiativeId: initiativeId)
+                } else if let habitId = appState.selectedHabitId {
+                    HabitDetailView(habitId: habitId)
+                } else if let calendarDate = appState.selectedCalendarDate {
+                    CalendarDetailView(date: calendarDate)
+                        .id(calendarDate)
+                } else {
+                    EmptyDetailView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if hasSelection {
+                Button(action: { appState.clearDetailSelection() }) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(AppTheme.metadataText)
+                        .padding(10)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .padding()
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedTaskId)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedNoteId)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedGoalId)
         .animation(.easeInOut(duration: 0.2), value: appState.selectedHabitId)
+        .animation(.easeInOut(duration: 0.2), value: appState.selectedCalendarDate)
+    }
+
+    private var hasSelection: Bool {
+        appState.selectedTaskId != nil ||
+        appState.selectedNoteId != nil ||
+        appState.selectedGoalId != nil ||
+        appState.selectedInitiativeId != nil ||
+        appState.selectedHabitId != nil ||
+        appState.selectedCalendarDate != nil
     }
 }
 
