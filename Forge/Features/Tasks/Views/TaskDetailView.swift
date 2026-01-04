@@ -69,40 +69,15 @@ struct TaskDetailView: View {
 
     @ViewBuilder
     private func headerSection(_ task: Task) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Button(action: {
-                AsyncTask {
-                    if task.status == .completed {
-                        var updated = task
-                        updated.status = .next
-                        updated.completedAt = nil
-                        viewModel.task = updated
-                        await viewModel.save()
-                    } else {
-                        var updated = task
-                        updated.status = .completed
-                        updated.completedAt = Date()
-                        viewModel.task = updated
-                        await viewModel.save()
-                    }
-                }
-            }) {
-                Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundColor(task.status == .completed ? AppTheme.accent : .secondary)
-            }
-            .buttonStyle(.plain)
-
-            TextField("Task title", text: Binding(
-                get: { viewModel.task?.title ?? "" },
-                set: { viewModel.task?.title = $0 }
-            ))
-            .font(.title3.weight(.semibold))
-            .textFieldStyle(.plain)
-            .focused($isTitleFocused)
-            .onSubmit {
-                AsyncTask { await viewModel.save() }
-            }
+        TextField("Task title", text: Binding(
+            get: { viewModel.task?.title ?? "" },
+            set: { viewModel.task?.title = $0 }
+        ))
+        .font(.title3.weight(.semibold))
+        .textFieldStyle(.plain)
+        .focused($isTitleFocused)
+        .onSubmit {
+            AsyncTask { await viewModel.save() }
         }
     }
 

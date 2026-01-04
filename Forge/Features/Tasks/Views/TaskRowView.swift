@@ -27,9 +27,17 @@ struct TaskRowView: View {
         HStack(alignment: .center, spacing: 14 * textScale) {
             // Checkbox
             Button(action: onToggleComplete) {
-                Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 24 * textScale))
-                    .foregroundColor(task.status == .completed ? AppTheme.accent : AppTheme.metadataText)
+                HStack(spacing: 0) {
+                    Text("[")
+                        .font(.system(size: 18 * textScale, weight: .light, design: .monospaced))
+                    Text(task.status == .completed ? "✓" : " ")
+                        .font(.system(size: 14 * textScale, weight: .medium, design: .serif))
+                        .italic()
+                        .frame(width: 10 * textScale)
+                    Text("]")
+                        .font(.system(size: 18 * textScale, weight: .light, design: .monospaced))
+                }
+                .foregroundColor(task.status == .completed ? AppTheme.accent : AppTheme.metadataText.opacity(0.5))
             }
             .buttonStyle(.plain)
 

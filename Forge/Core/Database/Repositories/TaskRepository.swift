@@ -188,9 +188,15 @@ final class TaskRepository {
     // MARK: - Observation (Reactive)
 
     func observeInbox() -> ValueObservation<ValueReducers.Fetch<[Task]>> {
-        ValueObservation.tracking { db in
+        let today = Calendar.current.startOfDay(for: Date())
+
+        return ValueObservation.tracking { db in
             try Task
-                .filter(Column("status") == TaskStatus.inbox.rawValue)
+                .filter(
+                    // Active inbox tasks OR completed today (to show strikethrough)
+                    (Column("status") == TaskStatus.inbox.rawValue) ||
+                    (Column("status") == TaskStatus.completed.rawValue && Column("completedAt") >= today && Column("projectId") == nil)
+                )
                 .order(Column("createdAt").desc)
                 .fetchAll(db)
         }
@@ -202,11 +208,12 @@ final class TaskRepository {
 
         return ValueObservation.tracking { db in
             try Task
-                .filter(Column("status") != TaskStatus.completed.rawValue)
-                .filter(Column("status") != TaskStatus.cancelled.rawValue)
                 .filter(
-                    (Column("dueDate") < tomorrow) ||
-                    (Column("isFlagged") == true)
+                    // Active tasks due today/flagged OR completed today
+                    (Column("status") != TaskStatus.completed.rawValue &&
+                     Column("status") != TaskStatus.cancelled.rawValue &&
+                     ((Column("dueDate") < tomorrow) || (Column("isFlagged") == true))) ||
+                    (Column("status") == TaskStatus.completed.rawValue && Column("completedAt") >= today)
                 )
                 .order(
                     Column("dueDate").ascNullsLast,
@@ -221,21 +228,29 @@ final class TaskRepository {
 
         return ValueObservation.tracking { db in
             try Task
-                .filter(Column("status") != TaskStatus.completed.rawValue)
-                .filter(Column("status") != TaskStatus.cancelled.rawValue)
                 .filter(Column("dueDate") != nil)
                 .filter(Column("dueDate") >= today)
+                .filter(
+                    // Active tasks OR completed today
+                    (Column("status") != TaskStatus.completed.rawValue && Column("status") != TaskStatus.cancelled.rawValue) ||
+                    (Column("status") == TaskStatus.completed.rawValue && Column("completedAt") >= today)
+                )
                 .order(Column("dueDate").asc)
                 .fetchAll(db)
         }
     }
 
     func observeFlagged() -> ValueObservation<ValueReducers.Fetch<[Task]>> {
-        ValueObservation.tracking { db in
+        let today = Calendar.current.startOfDay(for: Date())
+
+        return ValueObservation.tracking { db in
             try Task
                 .filter(Column("isFlagged") == true)
-                .filter(Column("status") != TaskStatus.completed.rawValue)
-                .filter(Column("status") != TaskStatus.cancelled.rawValue)
+                .filter(
+                    // Active tasks OR completed today
+                    (Column("status") != TaskStatus.completed.rawValue && Column("status") != TaskStatus.cancelled.rawValue) ||
+                    (Column("status") == TaskStatus.completed.rawValue && Column("completedAt") >= today)
+                )
                 .order(Column("dueDate").ascNullsLast)
                 .fetchAll(db)
         }
