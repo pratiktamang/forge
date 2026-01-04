@@ -387,22 +387,74 @@ struct PropertyPill<MenuContent: View>: View {
 // MARK: - Subtask Row
 
 struct SubtaskRow: View {
+    @Environment(\.textScale) private var textScale
     let subtask: Task
     let onToggle: () -> Void
     let onDelete: () -> Void
     @State private var isHovered = false
+    @State private var isCheckboxHovering = false
 
     var body: some View {
-        HStack(spacing: 12) {
+        let iconWidth = 20.0
+        let dashSize = 14.0
+        let titleFontSize = 14.0 * textScale
+
+        HStack(spacing: 12 * textScale) {
             Button(action: onToggle) {
-                Image(systemName: subtask.status == .completed ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(subtask.status == .completed ? .green : .secondary)
+                if isCheckboxHovering {
+                    if subtask.status == .completed {
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.system(size: (dashSize - 3) * textScale, weight: .medium))
+                            .foregroundColor(AppTheme.metadataText)
+                            .frame(width: 20 * textScale, height: 20 * textScale)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .stroke(AppTheme.metadataText.opacity(0.3), lineWidth: 1)
+                            )
+                    } else {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: (dashSize - 2) * textScale, weight: .semibold))
+                            .foregroundColor(AppTheme.accent)
+                            .frame(width: 20 * textScale, height: 20 * textScale)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .stroke(AppTheme.accent.opacity(0.5), lineWidth: 1)
+                            )
+                    }
+                } else {
+                    Text("-")
+                        .font(.system(size: dashSize * textScale, weight: .regular, design: .monospaced))
+                        .foregroundColor(subtask.status == .completed ? .clear : AppTheme.metadataText.opacity(0.6))
+                        .overlay {
+                            if subtask.status == .completed {
+                                Rectangle()
+                                    .fill(AppTheme.metadataText)
+                                    .frame(width: iconWidth * textScale, height: 2)
+                            }
+                        }
+                }
             }
             .buttonStyle(.plain)
+            .frame(width: iconWidth * textScale)
+            .onHover { hovering in
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    isCheckboxHovering = hovering
+                }
+            }
 
             Text(subtask.title)
-                .strikethrough(subtask.status == .completed)
-                .foregroundColor(subtask.status == .completed ? .secondary : .primary)
+                .font(.system(size: titleFontSize, weight: .medium, design: .rounded))
+                .foregroundColor(subtask.status == .completed ? AppTheme.metadataText : AppTheme.textPrimary)
+                .lineLimit(2)
+                .overlay(alignment: .leading) {
+                    if subtask.status == .completed && !isCheckboxHovering {
+                        Rectangle()
+                            .fill(AppTheme.metadataText)
+                            .frame(height: 2)
+                            .padding(.leading, -(12 * textScale + iconWidth * textScale / 2))
+                            .padding(.trailing, -(titleFontSize * 0.6))
+                    }
+                }
 
             Spacer()
 

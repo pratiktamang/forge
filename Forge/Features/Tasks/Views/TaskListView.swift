@@ -37,35 +37,73 @@ struct TaskListView: View {
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: []) {
                     ForEach(Array(viewModel.tasks.enumerated()), id: \.element.id) { index, task in
-                        TaskRowView(
-                            task: task,
-                            isSelected: appState.selectedTaskId == task.id,
-                            style: rowStyle,
-                            onToggleComplete: {
-                                AsyncTask { await viewModel.toggleComplete(task) }
-                            },
-                            onToggleFlag: {
-                                AsyncTask { await viewModel.toggleFlag(task) }
-                            },
-                            onSetStatus: { status in
-                                AsyncTask { await viewModel.setStatus(task, status: status) }
-                            },
-                            onDelete: {
-                                AsyncTask { await viewModel.deleteTask(task) }
-                            },
-                            onMoveUp: index > 0 ? { moveTask(task, by: -1) } : nil,
-                            onMoveDown: index < viewModel.tasks.count - 1 ? { moveTask(task, by: 1) } : nil,
-                            canMoveUp: index > 0,
-                            canMoveDown: index < viewModel.tasks.count - 1
-                        )
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .id(task.id)
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.16)) {
-                                appState.selectedTaskId = task.id
+                        VStack(spacing: 0) {
+                            // Main task row
+                            TaskRowView(
+                                task: task,
+                                isSelected: appState.selectedTaskId == task.id,
+                                style: rowStyle,
+                                subtaskInfo: viewModel.subtaskCounts[task.id],
+                                isExpanded: viewModel.expandedTaskIds.contains(task.id),
+                                onToggleExpand: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        viewModel.toggleExpanded(task.id)
+                                    }
+                                },
+                                onToggleComplete: {
+                                    AsyncTask { await viewModel.toggleComplete(task) }
+                                },
+                                onToggleFlag: {
+                                    AsyncTask { await viewModel.toggleFlag(task) }
+                                },
+                                onSetStatus: { status in
+                                    AsyncTask { await viewModel.setStatus(task, status: status) }
+                                },
+                                onDelete: {
+                                    AsyncTask { await viewModel.deleteTask(task) }
+                                },
+                                onMoveUp: index > 0 ? { moveTask(task, by: -1) } : nil,
+                                onMoveDown: index < viewModel.tasks.count - 1 ? { moveTask(task, by: 1) } : nil,
+                                canMoveUp: index > 0,
+                                canMoveDown: index < viewModel.tasks.count - 1
+                            )
+                            .id(task.id)
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.16)) {
+                                    appState.selectedTaskId = task.id
+                                }
+                            }
+
+                            // Subtasks (when expanded)
+                            if viewModel.expandedTaskIds.contains(task.id),
+                               let subtasks = viewModel.subtasks[task.id] {
+                                ForEach(subtasks) { subtask in
+                                    TaskRowView(
+                                        task: subtask,
+                                        isSelected: appState.selectedTaskId == subtask.id,
+                                        style: .subtask,
+                                        onToggleComplete: {
+                                            AsyncTask { await viewModel.toggleComplete(subtask) }
+                                        },
+                                        onToggleFlag: {
+                                            AsyncTask { await viewModel.toggleFlag(subtask) }
+                                        },
+                                        onDelete: {
+                                            AsyncTask { await viewModel.deleteTask(subtask) }
+                                        }
+                                    )
+                                    .padding(.leading, 32)
+                                    .id(subtask.id)
+                                    .onTapGesture {
+                                        withAnimation(.easeInOut(duration: 0.16)) {
+                                            appState.selectedTaskId = subtask.id
+                                        }
+                                    }
+                                }
                             }
                         }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
                     }
                 }
                 .padding(.vertical, 6)

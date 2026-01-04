@@ -14,6 +14,9 @@ final class TaskViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     @Published var inboxCount: Int = 0
+    @Published var subtaskCounts: [String: (total: Int, completed: Int)] = [:]
+    @Published var expandedTaskIds: Set<String> = []
+    @Published var subtasks: [String: [Task]] = [:]  // parentId -> subtasks
 
     // MARK: - Filter
 
@@ -65,6 +68,8 @@ final class TaskViewModel: ObservableObject {
 
     private let repository: TaskRepository
     private var cancellable: AnyCancellable?
+    private var subtaskCountsCancellable: AnyCancellable?
+    private var subtaskCancellables: [String: AnyCancellable] = [:]
 
     // MARK: - Init
 
@@ -93,6 +98,21 @@ final class TaskViewModel: ObservableObject {
             AsyncTask { await fetchCompleted() }
             return
         }
+
+        // Also observe subtask counts
+        startObservingSubtaskCounts()
+    }
+
+    private func startObservingSubtaskCounts() {
+        subtaskCountsCancellable = repository.observeSubtaskCounts()
+            .publisher(in: AppDatabase.shared.dbQueue, scheduling: .immediate)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { [weak self] counts in
+                    self?.subtaskCounts = counts
+                }
+            )
     }
 
     private func startObserving<T: ValueReducer>(_ observation: ValueObservation<T>) where T.Value == [Task] {
@@ -115,6 +135,35 @@ final class TaskViewModel: ObservableObject {
     func stopObserving() {
         cancellable?.cancel()
         cancellable = nil
+        subtaskCountsCancellable?.cancel()
+        subtaskCountsCancellable = nil
+        subtaskCancellables.values.forEach { $0.cancel() }
+        subtaskCancellables.removeAll()
+    }
+
+    // MARK: - Expansion
+
+    func toggleExpanded(_ taskId: String) {
+        if expandedTaskIds.contains(taskId) {
+            expandedTaskIds.remove(taskId)
+            subtaskCancellables[taskId]?.cancel()
+            subtaskCancellables.removeValue(forKey: taskId)
+        } else {
+            expandedTaskIds.insert(taskId)
+            startObservingSubtasks(for: taskId)
+        }
+    }
+
+    private func startObservingSubtasks(for parentId: String) {
+        subtaskCancellables[parentId] = repository.observeSubtasks(parentId: parentId)
+            .publisher(in: AppDatabase.shared.dbQueue, scheduling: .immediate)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { [weak self] tasks in
+                    self?.subtasks[parentId] = tasks
+                }
+            )
     }
 
     // MARK: - Actions
